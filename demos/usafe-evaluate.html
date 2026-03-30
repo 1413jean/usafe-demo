@@ -1,0 +1,846 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>免費評估 — 齊家厝 U-SAFE Cloud</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🏠</text></svg>" />
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+TC:wght@400;600;700;900&family=Noto+Sans+TC:wght@300;400;500;600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet" />
+<style>
+/* ── Reset ── */
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth}
+body{font-family:var(--font-sans);background:var(--bg);color:var(--text);line-height:1.6;-webkit-font-smoothing:antialiased}
+
+/* ── Tokens ── */
+:root{
+  --font-serif:"Noto Serif TC",serif;
+  --font-sans:"Noto Sans TC","Inter",sans-serif;
+  --gold:#C8A75D;
+  --gold-bright:#FFB200;
+  --gold-dim:rgba(200,167,93,0.12);
+  --brick:#CB3B1B;
+  --brick-h:#AB3418;
+  --icon-design:#f24822;
+  --teal:#2AA39F;
+  --sky:#4A90D9;
+  --ink:#1A1208;
+  --cta:#C8A75D;
+  --cta-h:#A98C4E;
+  --cta-shadow:rgba(200,167,93,0.35);
+  --bg:#F5F5F5;             /* grey.100 — lighter neutral */
+  --bg-alt:#FFFFFF;          /* white for inputs */
+  --bg-card:#FFFFFF;
+  --text:#1A1208;
+  --text-2:rgba(26,18,8,0.55);
+  --text-3:rgba(26,18,8,0.38);
+  --border:rgba(26,18,8,0.08);
+  --border-default:#E6E6E6; /* border-default = grey.200 */
+  --max-w:1160px;
+  --nav-h:64px;
+  --spring:cubic-bezier(0.34,1.3,0.64,1);
+}
+
+/* ── Spring Animations ── */
+@keyframes spring-in {
+  from { opacity:0; transform:translateY(20px) scale(0.98); }
+  to   { opacity:1; transform:translateY(0) scale(1); }
+}
+@keyframes panel-enter {
+  from { opacity:0; transform:translateY(16px) scale(0.97); filter:blur(4px); }
+  to   { opacity:1; transform:translateY(0) scale(1); filter:blur(0); }
+}
+@keyframes panel-exit {
+  from { opacity:1; transform:translateY(0) scale(1); filter:blur(0); }
+  to   { opacity:0; transform:translateY(-8px) scale(0.98); filter:blur(3px); }
+}
+.spring-hero { animation: spring-in 1.2s var(--spring) 0.1s both; }
+.spring-d1   { animation: spring-in 1.2s var(--spring) 0.2s both; }
+.spring-d2   { animation: spring-in 1.2s var(--spring) 0.35s both; }
+.spring-d3   { animation: spring-in 1.2s var(--spring) 0.5s both; }
+
+/* Wizard step panel transition */
+.wizard-panel.panel-entering {
+  animation: panel-enter 0.6s var(--spring) both;
+}
+.wizard-panel.panel-exiting {
+  animation: panel-exit 0.3s ease-out both;
+}
+
+/* ── Nav (pill style, matches landing) ── */
+.nav{
+  position:fixed;
+  top:16px; left:50%; transform:translateX(-50%);
+  width:calc(100% - 48px);
+  max-width:880px;
+  height:var(--nav-h);
+  background:rgba(255,255,255,0.72);
+  backdrop-filter:blur(24px) saturate(1.4);
+  -webkit-backdrop-filter:blur(24px) saturate(1.4);
+  border-radius:100px;
+  border:1px solid rgba(26,18,8,0.06);
+  box-shadow:0 2px 16px rgba(26,18,8,0.06);
+  display:grid;
+  grid-template-columns:auto 1fr auto;
+  align-items:center;
+  padding:0 20px;
+  z-index:100;
+  transition:width 0.5s var(--spring),max-width 0.5s var(--spring),height 0.4s var(--spring),background 0.35s ease,box-shadow 0.35s ease;
+}
+.nav.scrolled{
+  width:calc(100% - 160px);max-width:720px;height:52px;
+  background:rgba(255,255,255,0.88);box-shadow:0 4px 24px rgba(26,18,8,0.08);
+}
+.nav-brand{text-decoration:none;display:flex;align-items:center}
+.nav-brand img{height:24px;transition:height 0.4s var(--spring)}
+.nav.scrolled .nav-brand img{height:20px}
+.nav-links-desktop{display:flex;align-items:center;justify-content:center;gap:24px}
+.nav-links{display:none}
+.nav-link{color:var(--text-2);text-decoration:none;font-size:13px;font-weight:500;letter-spacing:-0.01em;transition:color 0.2s}
+.nav-link:hover{color:var(--text)}
+.nav-cta{
+  background:var(--cta);color:#fff;border:none;padding:8px 20px;border-radius:100px;
+  font-size:13px;font-weight:600;cursor:pointer;
+  transition:background 0.2s,transform 0.15s;
+}
+.nav-cta:hover{background:var(--cta-h);transform:scale(1.02)}
+.nav.scrolled .nav-cta{padding:6px 16px;font-size:12px}
+.nav-toggle{display:none;background:none;border:none;color:var(--text-2);font-size:22px;cursor:pointer}
+.mobile-login{display:none}
+.mobile-close{display:none}
+
+/* ── Page Header ── */
+.page-header{
+  text-align:center;padding:calc(var(--nav-h) + 56px) 24px 40px;
+  max-width:680px;margin:0 auto;
+}
+.page-header .eyebrow{
+  font-size:13px;font-weight:600;letter-spacing:1.5px;text-transform:uppercase;
+  color:var(--teal);margin-bottom:12px;
+}
+.page-header h1{
+  font-family:var(--font-serif);font-size:clamp(26px,4vw,38px);font-weight:700;
+  line-height:1.35;margin-bottom:14px;color:var(--ink);
+}
+.page-header .subtitle{
+  font-size:16px;color:var(--text-2);line-height:1.7;
+}
+
+/* ── Wizard Container ── */
+.wizard-wrap{
+  max-width:var(--max-w);margin:0 auto;padding:0 24px 64px;
+}
+
+/* ── Progress Bar ── */
+.wizard-progress{
+  display:flex;align-items:flex-start;justify-content:center;gap:0;
+  margin-bottom:48px;position:relative;
+}
+.wizard-step{
+  display:flex;flex-direction:column;align-items:center;position:relative;
+  flex:1;max-width:200px;
+}
+.wizard-step:not(:last-child)::after{
+  content:'';position:absolute;top:18px;left:calc(50% + 22px);
+  width:calc(100% - 44px);height:3px;
+  background:var(--border-default);border-radius:2px;z-index:0;
+  transition:background .4s ease;
+}
+.wizard-step.done:not(:last-child)::after{
+  background:var(--icon-design);
+}
+.step-circle{
+  width:36px;height:36px;border-radius:50%;
+  display:flex;align-items:center;justify-content:center;
+  font-size:14px;font-weight:600;
+  background:var(--bg-card);border:2px solid var(--border-default);
+  color:var(--text-3);position:relative;z-index:1;
+  transition:all .3s ease;
+}
+.wizard-step.active .step-circle{
+  border-color:var(--gold);color:var(--gold);
+  box-shadow:0 0 0 4px var(--gold-dim);
+}
+.wizard-step.done .step-circle{
+  background:var(--teal);border-color:var(--teal);color:#fff;
+}
+.wizard-step-label{
+  margin-top:8px;font-size:12px;font-weight:500;color:var(--text-3);
+  text-align:center;white-space:nowrap;line-height:1.4;
+}
+.wizard-step.active .wizard-step-label{color:var(--text);font-weight:600}
+.wizard-step.done .wizard-step-label{color:var(--teal)}
+
+/* ── Step Panels ── */
+.wizard-panel{
+  display:none;max-width:640px;margin:0 auto;
+  background:var(--bg-card);border-radius:16px;
+  padding:40px 36px;position:relative;overflow:hidden;
+  border:1px solid var(--border-default);
+  box-shadow:0 2px 12px rgba(26,18,8,0.06);
+}
+.wizard-panel.active{display:block}
+
+/* Gold accent line at top */
+.wizard-panel::before{
+  content:'';position:absolute;top:0;left:0;right:0;height:4px;
+  background:linear-gradient(90deg,var(--gold),var(--gold-bright),var(--gold));
+  border-radius:16px 16px 0 0;
+}
+
+/* Large faded step number */
+.wizard-panel::after{
+  font-family:var(--font-serif);font-weight:900;
+  font-size:120px;line-height:1;
+  color:rgba(26,18,8,0.05);
+  position:absolute;top:-10px;right:16px;
+  pointer-events:none;z-index:0;
+}
+#step1::after{content:'01'}
+#step2::after{content:'02'}
+#step3::after{content:'03'}
+#step4::after{content:'04'}
+
+.wizard-panel h2{
+  font-family:var(--font-serif);font-size:22px;font-weight:700;
+  margin-bottom:4px;position:relative;z-index:1;
+}
+.panel-emoji{
+  display:inline-block;margin-right:6px;font-size:20px;vertical-align:middle;
+}
+.wizard-panel .panel-desc{
+  font-size:14px;color:var(--text-2);margin-bottom:28px;line-height:1.7;
+  position:relative;z-index:1;
+}
+
+/* ── Form Elements ── */
+.form-grid-2{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+.form-group{margin-bottom:20px;position:relative;z-index:1}
+.form-group label{
+  display:block;font-size:13px;font-weight:600;margin-bottom:6px;color:var(--text);
+}
+.form-group input,
+.form-group select,
+.form-group textarea{
+  width:100%;padding:12px 14px;border:1px solid var(--border-default);border-radius:10px;
+  font-size:15px;font-family:var(--font-sans);background:var(--bg-alt);
+  color:var(--text);transition:border .2s,box-shadow .2s;outline:none;
+}
+.form-group input:focus,
+.form-group select:focus,
+.form-group textarea:focus{
+  border-color:var(--gold);box-shadow:0 0 0 3px var(--gold-dim);
+}
+.form-group textarea{resize:vertical;min-height:88px}
+.form-note{
+  font-size:13px;color:var(--text-2);margin-top:4px;line-height:1.5;
+}
+.warm-note{
+  font-size:13px;color:var(--text-3);line-height:1.6;
+  margin-top:20px;padding:14px 16px;
+  background:var(--bg);border-radius:10px;
+  border-left:3px solid var(--gold);
+  position:relative;z-index:1;
+}
+
+/* ── Buttons ── */
+.btn-row{display:flex;justify-content:space-between;align-items:center;margin-top:32px;gap:12px;position:relative;z-index:1}
+.btn{
+  display:inline-flex;align-items:center;gap:6px;
+  padding:13px 28px;border-radius:10px;font-size:15px;font-weight:600;
+  font-family:var(--font-sans);cursor:pointer;border:none;
+  transition:all .25s ease;
+}
+.btn-primary{
+  background:var(--cta);color:#fff;
+  box-shadow:0 4px 16px var(--cta-shadow);
+}
+.btn-primary:hover{background:var(--cta-h);transform:translateY(-1px)}
+.btn-ghost{
+  background:transparent;color:var(--text-2);
+  border:1px solid var(--border-default);
+}
+.btn-ghost:hover{background:var(--bg-alt);color:var(--text)}
+.btn-login{
+  background:var(--teal);color:#fff;
+  box-shadow:0 4px 16px rgba(42,163,159,0.3);
+}
+.btn-login:hover{background:#248f8b;transform:translateY(-1px)}
+
+/* ── Step 3 Login Note ── */
+.login-note{
+  font-size:13px;color:var(--text-2);text-align:center;
+  margin-top:16px;line-height:1.6;position:relative;z-index:1;
+}
+
+/* ── Step 4 Plan Cards ── */
+.plan-grid{
+  display:grid;grid-template-columns:repeat(3,1fr);gap:20px;
+  max-width:860px;margin:0 auto;position:relative;z-index:1;
+}
+.wizard-panel.step4{max-width:920px}
+.plan-card{
+  background:var(--bg-card);border:2px solid var(--border-default);border-radius:14px;
+  padding:28px 24px;text-align:center;cursor:pointer;
+  transition:all .25s ease;position:relative;
+}
+.plan-card:hover{border-color:var(--gold);transform:translateY(-2px);
+  box-shadow:0 6px 24px rgba(26,18,8,0.08)}
+.plan-card.selected{
+  border-color:var(--gold);
+  box-shadow:0 0 0 3px var(--gold-dim),0 6px 24px rgba(26,18,8,0.08);
+}
+.plan-badge{
+  position:absolute;top:-11px;left:50%;transform:translateX(-50%);
+  background:var(--icon-design);color:#fff;font-size:11px;font-weight:700;
+  padding:3px 14px;border-radius:20px;letter-spacing:0.5px;white-space:nowrap;
+}
+.plan-name{font-family:var(--font-serif);font-size:18px;font-weight:700;margin-bottom:4px}
+.plan-price{font-size:24px;font-weight:700;color:var(--gold);margin-bottom:16px}
+.plan-price span{font-size:13px;font-weight:400;color:var(--text-3)}
+.plan-features{list-style:none;text-align:left}
+.plan-features li{
+  font-size:13px;color:var(--text-2);padding:6px 0;
+  border-bottom:1px solid var(--border-default);
+  display:flex;align-items:center;gap:8px;
+}
+.plan-features li:last-child{border-bottom:none}
+.plan-features li::before{
+  content:'';display:inline-block;width:6px;height:6px;
+  border-radius:50%;background:var(--teal);flex-shrink:0;
+}
+
+/* ── Netflix Browse Section ── */
+.browse-section{
+  display:none;background:var(--ink);padding:64px 24px 72px;
+  opacity:0; transform:translateY(24px) scale(0.98);
+}
+.browse-section.visible{
+  display:block;
+  animation: spring-in 0.7s var(--spring) both;
+}
+.browse-inner{max-width:var(--max-w);margin:0 auto}
+.browse-title{
+  font-family:var(--font-serif);font-size:clamp(22px,3vw,30px);
+  font-weight:700;color:#F8F5EA;margin-bottom:8px;
+}
+.browse-sub{font-size:14px;color:rgba(248,245,234,0.55);margin-bottom:32px}
+.browse-row-label{
+  font-size:15px;font-weight:600;color:rgba(248,245,234,0.85);margin-bottom:14px;
+}
+.browse-scroll{
+  display:flex;gap:16px;overflow-x:auto;padding-bottom:12px;
+  scroll-snap-type:x mandatory;-webkit-overflow-scrolling:touch;
+}
+.browse-scroll::-webkit-scrollbar{height:4px}
+.browse-scroll::-webkit-scrollbar-thumb{background:rgba(248,245,234,0.15);border-radius:2px}
+.browse-card{
+  flex:0 0 280px;height:200px;border-radius:12px;overflow:hidden;
+  position:relative;cursor:pointer;scroll-snap-align:start;
+  transition:transform .3s ease;
+}
+.browse-card:hover{transform:scale(1.04)}
+.browse-card img{width:100%;height:100%;object-fit:cover}
+.browse-card .card-overlay{
+  position:absolute;bottom:0;left:0;right:0;padding:16px 14px;
+  background:linear-gradient(transparent,rgba(0,0,0,0.78));
+}
+.browse-card .card-name{font-size:15px;font-weight:600;color:#fff}
+.browse-card .card-stars{font-size:12px;color:var(--gold-bright);margin:2px 0}
+.browse-card .card-spec{font-size:11px;color:rgba(255,255,255,0.6)}
+.browse-row+.browse-row{margin-top:36px}
+
+/* ── Footer ── */
+.site-footer{
+  text-align:center;padding:36px 24px;
+  font-size:13px;color:var(--text-3);
+  border-top:1px solid var(--border-default);
+}
+
+/* ── Responsive ── */
+@media(max-width:960px){
+  .plan-grid{grid-template-columns:1fr;max-width:400px}
+  .wizard-panel.step4{max-width:640px}
+}
+@media(max-width:768px){
+  .nav{
+    top:8px;width:calc(100% - 24px);padding:0 16px;
+    grid-template-columns:1fr auto;height:56px;
+  }
+  .nav.scrolled{width:calc(100% - 24px);max-width:none;height:56px}
+  .nav-brand img{height:32px}
+  .nav.scrolled .nav-brand img{height:32px}
+  .nav-cta{display:none}
+  .nav-links-desktop{display:none}
+  .nav-links.open{
+    display:flex !important;flex-direction:column;
+    position:fixed;inset:0;margin:0;
+    width:100%;height:100%;
+    background:#FFFFFF;
+    padding:100px 32px 60px;gap:0;
+    z-index:9998;
+    align-items:flex-start;justify-content:flex-start;
+    border:none;border-radius:0;
+    overflow-y:auto;
+  }
+  .nav-links.open .mobile-close{
+    display:flex;align-items:center;justify-content:center;
+    position:absolute;top:20px;right:24px;
+    width:48px;height:48px;font-size:32px;
+    color:var(--text);background:none;border:none;cursor:pointer;
+    z-index:9999;border-radius:50%;transition:background 0.2s;
+  }
+  .nav-links.open .mobile-close:hover{background:var(--bg-alt)}
+  .nav-links.open .nav-link{
+    font-size:28px;font-family:var(--font-serif);font-weight:700;
+    color:var(--text);padding:20px 0;
+    border-bottom:1px solid var(--border-default);
+    width:100%;text-align:left;
+  }
+  .nav-links.open .nav-link:hover{color:var(--gold);border-bottom-color:var(--gold)}
+  .nav-links.open .mobile-login{
+    display:block;font-size:28px;font-family:var(--font-serif);font-weight:700;
+    color:var(--cta);padding:20px 0;width:100%;text-align:left;
+    background:none;border:none;cursor:pointer;
+  }
+  .nav-toggle{display:block;z-index:9999;font-size:24px;justify-self:end;position:relative}
+}
+@media(max-width:640px){
+  .form-grid-2{grid-template-columns:1fr}
+  .wizard-step-label{display:none}
+  .wizard-panel{padding:28px 20px}
+  .wizard-panel::after{font-size:80px;right:8px}
+  .page-header{padding-top:calc(var(--nav-h) + 36px);padding-bottom:28px}
+  .btn-row{flex-direction:column-reverse}
+  .btn-row .btn{width:100%;justify-content:center}
+  .browse-card{flex:0 0 240px;height:170px}
+}
+</style>
+</head>
+<body>
+
+<!-- ── Nav ── -->
+<nav class="nav" id="navbar">
+  <a href="usafe-landing-v2.0.html" class="nav-brand">
+    <img src="../assets/images/logo-dark.png" alt="齊家厝 U-SAFE" />
+  </a>
+  <div class="nav-links-desktop">
+    <a class="nav-link" href="usafe-blog.html">屋主故事</a>
+    <a class="nav-link" href="usafe-landing-v2.0.html#before">老屋現況</a>
+    <a class="nav-link" href="usafe-landing-v2.0.html#journey">服務流程</a>
+    <a class="nav-link" href="usafe-landing-v2.0.html#after">成功案例</a>
+    <a class="nav-link" href="usafe-landing-v2.0.html#cta">免費諮詢</a>
+  </div>
+  <button class="nav-cta" onclick="window.location.href='usafe-dashboard.html'">登入</button>
+  <button class="nav-toggle" onclick="toggleNav()">&#9776;</button>
+</nav>
+<!-- Mobile fullscreen menu -->
+<div class="nav-links" id="navLinks">
+  <button class="mobile-close" onclick="toggleNav()">&times;</button>
+  <a class="nav-link" href="usafe-story.html" onclick="closeNav()">屋主故事</a>
+  <a class="nav-link" href="usafe-landing-v2.0.html#before" onclick="closeNav()">老屋現況</a>
+  <a class="nav-link" href="usafe-landing-v2.0.html#journey" onclick="closeNav()">服務流程</a>
+  <a class="nav-link" href="usafe-landing-v2.0.html#after" onclick="closeNav()">成功案例</a>
+  <a class="nav-link" href="usafe-landing-v2.0.html#cta" onclick="closeNav()">免費諮詢</a>
+  <button class="mobile-login" onclick="closeNav();window.location.href='usafe-dashboard.html';">登入 / 註冊</button>
+</div>
+
+<!-- ── Page Header ── -->
+<header class="page-header">
+  <div class="eyebrow spring-hero">Free Evaluation</div>
+  <h1 class="spring-d1">讓老屋的故事，繼續寫下去</h1>
+  <p class="subtitle spring-d2">完成四步驟評估，獲得免費專業分析與建議方案。</p>
+</header>
+
+<!-- ── Wizard ── -->
+<section class="wizard-wrap">
+
+  <!-- Progress -->
+  <div class="wizard-progress spring-d3">
+    <div class="wizard-step active" data-step="1">
+      <div class="step-circle">1</div>
+      <div class="wizard-step-label">認識您的家</div>
+    </div>
+    <div class="wizard-step" data-step="2">
+      <div class="step-circle">2</div>
+      <div class="wizard-step-label">了解房屋狀況</div>
+    </div>
+    <div class="wizard-step" data-step="3">
+      <div class="step-circle">3</div>
+      <div class="wizard-step-label">建立帳號</div>
+    </div>
+    <div class="wizard-step" data-step="4">
+      <div class="step-circle">4</div>
+      <div class="wizard-step-label">選擇方案</div>
+    </div>
+  </div>
+
+  <!-- Step 1: 認識您的家 -->
+  <div class="wizard-panel active panel-entering" id="step1">
+    <h2><span class="panel-emoji">🏠</span> 認識您的家</h2>
+    <p class="panel-desc">每一棟房子都有它的故事。讓我們從了解您的家開始。</p>
+    <div class="form-grid-2">
+      <div class="form-group">
+        <label>姓名</label>
+        <input type="text" placeholder="王大明" id="fName" />
+      </div>
+      <div class="form-group">
+        <label>手機號碼</label>
+        <input type="tel" placeholder="0912-345-678" id="fPhone" />
+      </div>
+    </div>
+    <div class="form-group">
+      <label>房屋所在區域</label>
+      <select id="fArea">
+        <option value="">請選擇區域</option>
+        <optgroup label="台北市">
+          <option>中正區</option><option>大同區</option><option>中山區</option>
+          <option>松山區</option><option>大安區</option><option>萬華區</option>
+          <option>信義區</option><option>士林區</option><option>北投區</option>
+          <option>內湖區</option><option>南港區</option><option>文山區</option>
+        </optgroup>
+        <optgroup label="新北市">
+          <option>板橋區</option><option>三重區</option><option>中和區</option>
+          <option>永和區</option><option>新莊區</option><option>新店區</option>
+          <option>土城區</option><option>蘆洲區</option><option>汐止區</option>
+          <option>樹林區</option><option>淡水區</option>
+        </optgroup>
+        <optgroup label="其他">
+          <option>其他地區</option>
+        </optgroup>
+      </select>
+    </div>
+    <div class="form-group">
+      <label>建物屋齡</label>
+      <select id="fAge">
+        <option value="">請選擇屋齡</option>
+        <option>20-30年</option>
+        <option>30-40年</option>
+        <option>40-50年</option>
+        <option>50年以上</option>
+      </select>
+    </div>
+    <div class="warm-note">您的資料僅用於本次評估，我們重視每一位屋主的隱私。</div>
+    <div class="btn-row">
+      <span></span>
+      <button class="btn btn-primary" onclick="wizNext()">下一步 &rarr;</button>
+    </div>
+  </div>
+
+  <!-- Step 2: 了解房屋狀況 -->
+  <div class="wizard-panel" id="step2">
+    <h2><span class="panel-emoji">🔍</span> 了解房屋狀況</h2>
+    <p class="panel-desc">這些資訊幫助我們的專業團隊為您量身打造最適合的方案。</p>
+    <div class="form-group">
+      <label>建物類型</label>
+      <select id="fType">
+        <option value="">請選擇類型</option>
+        <option>公寓（無電梯）</option>
+        <option>透天厝</option>
+        <option>大樓（有電梯）</option>
+        <option>其他</option>
+      </select>
+    </div>
+    <div class="form-grid-2">
+      <div class="form-group">
+        <label>樓層數</label>
+        <input type="number" placeholder="例：5" min="1" id="fFloors" />
+      </div>
+      <div class="form-group">
+        <label>戶數</label>
+        <input type="number" placeholder="例：12" min="1" id="fUnits" />
+      </div>
+    </div>
+    <div class="form-group">
+      <label>是否已有都更計畫？</label>
+      <select id="fPlan">
+        <option value="">請選擇</option>
+        <option>尚無計畫</option>
+        <option>已有初步構想</option>
+        <option>已進入正式程序</option>
+        <option>已有建商接洽</option>
+      </select>
+    </div>
+    <div class="form-group">
+      <label>其他備註</label>
+      <textarea placeholder="例：近期外牆有裂縫、想了解危老條例適用性..." id="fNotes"></textarea>
+    </div>
+    <div class="warm-note">不確定沒關係，我們的團隊會在現場勘查時協助您確認。</div>
+    <div class="btn-row">
+      <button class="btn btn-ghost" onclick="wizPrev()">&larr; 上一步</button>
+      <button class="btn btn-primary" onclick="wizNext()">下一步 &rarr;</button>
+    </div>
+  </div>
+
+  <!-- Step 3: 建立您的帳號 -->
+  <div class="wizard-panel" id="step3">
+    <h2><span class="panel-emoji">🔐</span> 建立您的帳號</h2>
+    <p class="panel-desc">登入後，您可以隨時查看評估進度、比較方案，所有資訊一目了然。</p>
+    <div class="form-group">
+      <label>電子信箱</label>
+      <input type="email" placeholder="you@example.com" id="fEmail" />
+    </div>
+    <div class="form-group">
+      <label>密碼</label>
+      <input type="password" placeholder="至少 6 碼" id="fPass" />
+    </div>
+    <p class="login-note">已有帳號？直接登入即可。新用戶將自動建立帳號。</p>
+    <div class="btn-row">
+      <button class="btn btn-ghost" onclick="wizPrev()">&larr; 上一步</button>
+      <button class="btn btn-login" onclick="wizLogin()">登入並繼續 &rarr;</button>
+    </div>
+  </div>
+
+  <!-- Step 4: 選擇您的方案 -->
+  <div class="wizard-panel step4" id="step4">
+    <h2><span class="panel-emoji">✨</span> 選擇您的方案</h2>
+    <p class="panel-desc">根據您的需求，我們提供三種不同深度的服務。選擇最適合您的方案開始。</p>
+    <div class="plan-grid">
+      <!-- Free -->
+      <div class="plan-card" onclick="selectPlan(this)">
+        <div class="plan-name">免費方案</div>
+        <div class="plan-price">$0 <span>/ 免費</span></div>
+        <ul class="plan-features">
+          <li>基礎房屋評估</li>
+          <li>AI 初步分析</li>
+          <li>48 小時內回覆</li>
+        </ul>
+      </div>
+      <!-- Pro -->
+      <div class="plan-card" onclick="selectPlan(this)">
+        <div class="plan-badge">推薦</div>
+        <div class="plan-name">進階方案</div>
+        <div class="plan-price">專案報價</div>
+        <ul class="plan-features">
+          <li>專業現場勘查</li>
+          <li>結構安全報告</li>
+          <li>建商媒合 2-3 家</li>
+          <li>專人客服</li>
+        </ul>
+      </div>
+      <!-- VIP -->
+      <div class="plan-card" onclick="selectPlan(this)">
+        <div class="plan-name">VIP 方案</div>
+        <div class="plan-price">專案報價</div>
+        <ul class="plan-features">
+          <li>全程專案管理</li>
+          <li>律師合約審查</li>
+          <li>優先媒合</li>
+          <li>定期進度報告</li>
+          <li>家族溝通協助</li>
+        </ul>
+      </div>
+    </div>
+    <div class="btn-row" style="max-width:640px;margin:32px auto 0">
+      <button class="btn btn-ghost" onclick="wizPrev()">&larr; 上一步</button>
+      <button class="btn btn-primary" onclick="wizSubmit()">送出評估申請 &rarr;</button>
+    </div>
+  </div>
+
+</section>
+
+<!-- ── Netflix Browse Section ── -->
+<section class="browse-section" id="browseSection">
+  <div class="browse-inner">
+    <div class="browse-title">探索合作建商與都更方案</div>
+    <div class="browse-sub">瀏覽我們的合作夥伴與成功案例，找到最適合您的方案。</div>
+
+    <!-- Row 1 -->
+    <div class="browse-row">
+      <div class="browse-row-label">精選建商</div>
+      <div class="browse-scroll">
+        <div class="browse-card">
+          <img src="../assets/images/new-highrise-1.png" alt="國泰建設" />
+          <div class="card-overlay">
+            <div class="card-name">國泰建設</div>
+            <div class="card-stars">&#9733;&#9733;&#9733;&#9733;&#9733;</div>
+            <div class="card-spec">都更重建 &middot; 危老改建</div>
+          </div>
+        </div>
+        <div class="browse-card">
+          <img src="../assets/images/new-highrise-2.png" alt="潤泰創新" />
+          <div class="card-overlay">
+            <div class="card-name">潤泰創新</div>
+            <div class="card-stars">&#9733;&#9733;&#9733;&#9733;&#9734;</div>
+            <div class="card-spec">結構補強 &middot; 整建維護</div>
+          </div>
+        </div>
+        <div class="browse-card">
+          <img src="../assets/images/new-highrise-3.png" alt="興富發建設" />
+          <div class="card-overlay">
+            <div class="card-name">興富發建設</div>
+            <div class="card-stars">&#9733;&#9733;&#9733;&#9733;&#9733;</div>
+            <div class="card-spec">全案管理 &middot; 協議合建</div>
+          </div>
+        </div>
+        <div class="browse-card">
+          <img src="../assets/images/construction-hero.png" alt="遠雄建設" />
+          <div class="card-overlay">
+            <div class="card-name">遠雄建設</div>
+            <div class="card-stars">&#9733;&#9733;&#9733;&#9733;&#9734;</div>
+            <div class="card-spec">都更重建 &middot; 權益保障</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Row 2 -->
+    <div class="browse-row">
+      <div class="browse-row-label">熱門都更方案</div>
+      <div class="browse-scroll">
+        <div class="browse-card" style="background:linear-gradient(135deg,#2C2C2C,#3a3a3a)">
+          <div class="card-overlay" style="background:none;top:0;display:flex;flex-direction:column;justify-content:flex-end">
+            <div class="card-name">危老重建快速通道</div>
+            <div class="card-spec" style="margin-top:4px;color:rgba(255,255,255,0.5)">30年以上建物，享容積獎勵最高40%，最快6個月啟動。</div>
+          </div>
+        </div>
+        <div class="browse-card" style="background:linear-gradient(135deg,#1a3a3a,#2a4a4a)">
+          <div class="card-overlay" style="background:none;top:0;display:flex;flex-direction:column;justify-content:flex-end">
+            <div class="card-name">都更協議合建方案</div>
+            <div class="card-spec" style="margin-top:4px;color:rgba(255,255,255,0.5)">地主與建商合作，保障原住戶權益，分回新屋。</div>
+          </div>
+        </div>
+        <div class="browse-card" style="background:linear-gradient(135deg,#3a2a1a,#4a3a2a)">
+          <div class="card-overlay" style="background:none;top:0;display:flex;flex-direction:column;justify-content:flex-end">
+            <div class="card-name">整建維護補助計畫</div>
+            <div class="card-spec" style="margin-top:4px;color:rgba(255,255,255,0.5)">外牆拉皮、結構補強、電梯增設，政府補助最高75%。</div>
+          </div>
+        </div>
+        <div class="browse-card" style="background:linear-gradient(135deg,#2a2a3a,#3a3a4a)">
+          <div class="card-overlay" style="background:none;top:0;display:flex;flex-direction:column;justify-content:flex-end">
+            <div class="card-name">自主更新輔導方案</div>
+            <div class="card-spec" style="margin-top:4px;color:rgba(255,255,255,0.5)">住戶自組更新會，專業團隊全程輔導，掌握主導權。</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ── Footer ── -->
+<footer class="site-footer">
+  齊家厝 U-SAFE Cloud &copy; 2026 &middot; 台灣危老安全建築經理有限公司
+</footer>
+
+<script>
+/* ── Wizard State ── */
+let wizStep = 1;
+let selectedPlan = null;
+let isTransitioning = false;
+
+const steps = document.querySelectorAll('.wizard-step');
+const panels = document.querySelectorAll('.wizard-panel');
+
+function wizUpdate(direction) {
+  /* Update progress indicators */
+  steps.forEach((s, i) => {
+    const n = i + 1;
+    s.classList.remove('active', 'done');
+    if (n < wizStep) {
+      s.classList.add('done');
+      s.querySelector('.step-circle').innerHTML = '&#10003;';
+    } else if (n === wizStep) {
+      s.classList.add('active');
+      s.querySelector('.step-circle').textContent = n;
+    } else {
+      s.querySelector('.step-circle').textContent = n;
+    }
+  });
+
+  /* Panel transition with animation */
+  panels.forEach((p, i) => {
+    if (i + 1 === wizStep) {
+      p.classList.add('active');
+      p.classList.remove('panel-exiting');
+      p.classList.add('panel-entering');
+      /* Remove class after animation completes */
+      setTimeout(() => {
+        p.classList.remove('panel-entering');
+        isTransitioning = false;
+      }, 600);
+    } else {
+      p.classList.remove('active', 'panel-entering');
+    }
+  });
+}
+
+function wizNext() {
+  if (isTransitioning) return;
+  if (wizStep < 4) {
+    isTransitioning = true;
+    wizStep++;
+    wizUpdate('next');
+    window.scrollTo({ top: 280, behavior: 'smooth' });
+  }
+}
+function wizPrev() {
+  if (isTransitioning) return;
+  if (wizStep > 1) {
+    isTransitioning = true;
+    wizStep--;
+    wizUpdate('prev');
+    window.scrollTo({ top: 280, behavior: 'smooth' });
+  }
+}
+
+function wizLogin() {
+  alert('Demo 模式：登入成功！\n（帳號：demo@usafe.tw / 密碼：usafe2026）');
+  showBrowse();
+  wizStep = 4;
+  wizUpdate('next');
+  window.scrollTo({ top: 280, behavior: 'smooth' });
+}
+
+function showBrowse() {
+  document.getElementById('browseSection').classList.add('visible');
+}
+
+function selectPlan(card) {
+  document.querySelectorAll('.plan-card').forEach(c => c.classList.remove('selected'));
+  card.classList.add('selected');
+  selectedPlan = card.querySelector('.plan-name').textContent;
+}
+
+function wizSubmit() {
+  if (!selectedPlan) {
+    alert('請先選擇一個方案！');
+    return;
+  }
+  alert('感謝您的申請！\n\n已選方案：' + selectedPlan + '\n我們的專業團隊將在 48 小時內與您聯繫。\n\n您的家，值得最好的未來。');
+}
+
+/* ── Nav toggle (mobile) ── */
+function toggleNav() {
+  var nav = document.getElementById('navLinks');
+  var btn = document.querySelector('.nav-toggle');
+  if (nav.classList.contains('open')) {
+    nav.classList.remove('open');
+    btn.innerHTML = '&#9776;';
+    document.body.style.overflow = '';
+  } else {
+    nav.classList.add('open');
+    btn.innerHTML = '&times;';
+    document.body.style.overflow = 'hidden';
+  }
+}
+function closeNav() {
+  var nav = document.getElementById('navLinks');
+  var btn = document.querySelector('.nav-toggle');
+  if (!nav.classList.contains('open')) return;
+  nav.classList.remove('open');
+  btn.innerHTML = '&#9776;';
+  document.body.style.overflow = '';
+}
+
+/* ── Nav shrink on scroll ── */
+(function() {
+  var navbar = document.getElementById('navbar');
+  if (!navbar) return;
+  window.addEventListener('scroll', function() {
+    if (window.scrollY > 80) navbar.classList.add('scrolled');
+    else navbar.classList.remove('scrolled');
+  }, { passive: true });
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,1391 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>齊家厝 U-SAFE — 從理解到行動，AI 陪你走每一步</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+TC:wght@400;600;700;900&family=Noto+Sans+TC:wght@300;400;500;600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet" />
+  <style>
+    /* ══════════════════════════════════════════
+       齊家厝 U-SAFE Landing Page v1.3
+       Superpower-inspired · Warm Light · Product Spec v1.0
+       品牌色對齊 Figma Design Token (Light)
+       ══════════════════════════════════════════ */
+
+    :root {
+      --font-display: 'Noto Serif TC', serif;
+      --font-body: 'Noto Sans TC', 'Inter', sans-serif;
+
+      /* Brand */
+      --gold:        #FFB200;
+      --gold-light:  #FFC940;
+      --gold-dim:    rgba(255,178,0,0.10);
+      --gold-border: rgba(255,178,0,0.25);
+      --brick:       #CB3B1B;
+      --brick-hover: #B5331A;
+      --brick-dim:   rgba(203,59,27,0.07);
+      --teal:        #2AA39F;
+      --teal-dim:    rgba(42,163,159,0.08);
+      --sky:         #4A90D9;
+      --sky-dim:     rgba(74,144,217,0.08);
+      --ink:         #1A1208;
+      --parchment:   #F8F5EA;
+
+      /* Warm Light theme */
+      --bg:              #F8F5EA;
+      --bg-card:         #FFFFFF;
+      --bg-card-hover:   #FFFDF6;
+      --bg-section-alt:  #F2EDDF;
+      --bg-dark:         #1A1208;
+      --foreground:      #1A1208;
+      --text:            rgba(26,18,8,0.90);
+      --text-sec:        rgba(26,18,8,0.55);
+      --text-muted:      rgba(26,18,8,0.38);
+      --text-on-dark:    rgba(255,255,255,0.92);
+      --text-sec-dark:   rgba(255,255,255,0.60);
+      --border:          rgba(26,18,8,0.08);
+      --border-hover:    rgba(26,18,8,0.15);
+
+      /* Layout */
+      --max-w: 1200px;
+      --nav-h: 72px;
+      --section-pad: clamp(80px, 10vw, 140px) clamp(20px, 5vw, 48px);
+    }
+
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    html { scroll-behavior: smooth; -webkit-font-smoothing: antialiased; }
+
+    body {
+      font-family: var(--font-body);
+      color: var(--text);
+      background: var(--bg);
+      line-height: 1.7;
+      font-size: 16px;
+      overflow-x: hidden;
+    }
+
+    /* ── ANIMATIONS ── */
+    @keyframes fade-rise {
+      from { opacity: 0; transform: translateY(32px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+    .animate-fr { animation: fade-rise 0.8s ease-out both; }
+    .animate-fr-d1 { animation: fade-rise 0.8s ease-out 0.15s both; }
+    .animate-fr-d2 { animation: fade-rise 0.8s ease-out 0.3s both; }
+    .animate-fr-d3 { animation: fade-rise 0.8s ease-out 0.45s both; }
+
+    .fade-up {
+      opacity: 0; transform: translateY(28px);
+      transition: opacity 0.7s ease-out, transform 0.7s ease-out;
+    }
+    .fade-up.visible { opacity: 1; transform: translateY(0); }
+
+    /* ── NAV ── */
+    .nav {
+      position: fixed; top: 0; left: 0; right: 0;
+      height: var(--nav-h);
+      display: flex; align-items: center;
+      justify-content: space-between;
+      padding: 0 clamp(20px, 4vw, 48px);
+      z-index: 100;
+      transition: background 0.4s, box-shadow 0.4s;
+    }
+    .nav.scrolled {
+      background: rgba(248,245,234,0.92);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      box-shadow: 0 1px 0 var(--border);
+    }
+    .nav-brand img { height: 32px; width: auto; }
+    .nav-links { display: flex; align-items: center; gap: 28px; }
+    .nav-link {
+      color: var(--text-sec);
+      text-decoration: none;
+      font-size: 14px; font-weight: 500;
+      letter-spacing: -0.01em;
+      transition: color 0.2s;
+    }
+    .nav-link:hover, .nav-link.active { color: var(--foreground); }
+    .nav-cta {
+      display: inline-flex; align-items: center;
+      padding: 10px 24px;
+      background: var(--brick);
+      color: #ffffff;
+      border-radius: 100px;
+      font-size: 14px; font-weight: 600;
+      text-decoration: none;
+      cursor: pointer;
+      border: none;
+      transition: background 0.2s, transform 0.15s;
+    }
+    .nav-cta:hover { background: var(--brick-hover); transform: scale(1.02); }
+    .nav-toggle {
+      display: none; background: none; border: none;
+      font-size: 24px; cursor: pointer; color: var(--foreground);
+    }
+
+    /* ── HERO (Superpower-style fullscreen) ── */
+    .hero-wrapper {
+      position: relative;
+      min-height: 100vh;
+      display: flex; flex-direction: column;
+      overflow: hidden;
+    }
+    .hero-bg {
+      position: absolute; inset: 0; z-index: 0;
+    }
+    .hero-bg video {
+      position: absolute; inset: 0;
+      width: 100%; height: 100%;
+      object-fit: cover;
+    }
+    .hero-bg-placeholder {
+      position: absolute; inset: 0;
+      background:
+        radial-gradient(ellipse 80% 50% at 50% 0%, rgba(255,178,0,0.06) 0%, transparent 60%),
+        linear-gradient(180deg, #F8F5EA 0%, #F2EDDF 50%, #F8F5EA 100%);
+    }
+    .hero-overlay {
+      position: absolute; inset: 0;
+      background: linear-gradient(
+        180deg,
+        rgba(248,245,234,0.50) 0%,
+        rgba(248,245,234,0.25) 40%,
+        rgba(248,245,234,0.40) 70%,
+        rgba(248,245,234,0.95) 100%
+      );
+      z-index: 1;
+    }
+    .hero {
+      position: relative; z-index: 10;
+      flex: 1;
+      display: flex; flex-direction: column;
+      align-items: center; justify-content: center;
+      text-align: center;
+      padding: 140px clamp(20px, 5vw, 48px) 100px;
+      max-width: 900px;
+      margin: 0 auto;
+    }
+    .hero h1 {
+      font-family: var(--font-display);
+      font-size: clamp(36px, 6vw, 72px);
+      font-weight: 900;
+      line-height: 1.15;
+      letter-spacing: -0.025em;
+      color: var(--foreground);
+    }
+    .hero h1 em {
+      font-style: normal;
+      background: linear-gradient(90deg, var(--brick), var(--gold));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+    .hero-sub {
+      font-size: clamp(15px, 2vw, 18px);
+      color: var(--text-sec);
+      max-width: 560px;
+      margin-top: 24px;
+      line-height: 1.8;
+    }
+    .hero-actions {
+      display: flex; gap: 16px;
+      margin-top: 40px;
+      flex-wrap: wrap; justify-content: center;
+    }
+    .btn-primary {
+      display: inline-flex; align-items: center; gap: 8px;
+      padding: 16px 40px;
+      background: var(--brick);
+      color: #ffffff;
+      border: none; border-radius: 100px;
+      font-size: 16px; font-weight: 600;
+      cursor: pointer;
+      font-family: var(--font-body);
+      text-decoration: none;
+      transition: background 0.2s, transform 0.15s, box-shadow 0.2s;
+    }
+    .btn-primary:hover {
+      background: var(--brick-hover);
+      transform: translateY(-1px);
+      box-shadow: 0 8px 24px rgba(203,59,27,0.25);
+    }
+    .btn-secondary {
+      display: inline-flex; align-items: center; gap: 8px;
+      padding: 16px 40px;
+      background: transparent;
+      color: var(--foreground);
+      border: 1.5px solid var(--border-hover);
+      border-radius: 100px;
+      font-size: 16px; font-weight: 500;
+      cursor: pointer;
+      font-family: var(--font-body);
+      text-decoration: none;
+      transition: all 0.2s;
+    }
+    .btn-secondary:hover {
+      border-color: var(--foreground);
+      background: rgba(26,18,8,0.03);
+    }
+
+    /* ── STATS BAR ── */
+    .stats-bar {
+      background: var(--bg-dark);
+      padding: 48px clamp(20px, 5vw, 48px);
+    }
+    .stats-inner {
+      max-width: var(--max-w);
+      margin: 0 auto;
+      display: flex;
+      justify-content: space-around;
+      flex-wrap: wrap;
+      gap: 32px;
+    }
+    .stat-item { text-align: center; }
+    .stat-num {
+      font-family: var(--font-display);
+      font-size: clamp(28px, 4vw, 40px);
+      font-weight: 700;
+      color: var(--gold);
+      letter-spacing: -0.02em;
+    }
+    .stat-label {
+      font-size: 13px;
+      color: var(--text-sec-dark);
+      margin-top: 4px;
+    }
+
+    /* ── SECTIONS ── */
+    section {
+      padding: var(--section-pad);
+    }
+    .section-inner {
+      max-width: var(--max-w);
+      margin: 0 auto;
+    }
+    .section-label {
+      display: inline-block;
+      font-size: 12px; font-weight: 600;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--brick);
+      margin-bottom: 12px;
+    }
+    .section-title {
+      font-family: var(--font-display);
+      font-size: clamp(28px, 4vw, 44px);
+      font-weight: 700;
+      line-height: 1.2;
+      letter-spacing: -0.02em;
+      color: var(--foreground);
+    }
+    .section-desc {
+      font-size: clamp(15px, 1.8vw, 17px);
+      color: var(--text-sec);
+      max-width: 600px;
+      margin-top: 16px;
+      line-height: 1.8;
+    }
+
+    /* ── QUOTE (Superpower-style center quote) ── */
+    .quote-section {
+      padding: clamp(60px, 8vw, 100px) clamp(20px, 5vw, 48px);
+      text-align: center;
+    }
+    .quote-text {
+      font-family: var(--font-display);
+      font-size: clamp(22px, 3.5vw, 36px);
+      font-weight: 600;
+      line-height: 1.5;
+      letter-spacing: -0.015em;
+      color: var(--foreground);
+      max-width: 800px;
+      margin: 0 auto;
+    }
+    .quote-text em {
+      font-style: normal;
+      color: var(--brick);
+    }
+    .quote-attr {
+      margin-top: 20px;
+      font-size: 14px;
+      color: var(--text-muted);
+    }
+
+    /* ── MEMBERSHIP TIERS (from product spec) ── */
+    .tier-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 24px;
+      margin-top: 48px;
+    }
+    .tier-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      padding: 36px 28px;
+      transition: transform 0.3s, box-shadow 0.3s, border-color 0.3s;
+      position: relative;
+      overflow: hidden;
+    }
+    .tier-card:hover {
+      transform: translateY(-4px);
+      box-shadow: 0 12px 40px rgba(26,18,8,0.08);
+      border-color: var(--border-hover);
+    }
+    .tier-card.featured {
+      border-color: var(--gold-border);
+      box-shadow: 0 0 0 1px var(--gold-border);
+    }
+    .tier-card.featured::before {
+      content: '最受歡迎';
+      position: absolute; top: 16px; right: 16px;
+      background: var(--gold);
+      color: var(--ink);
+      font-size: 11px; font-weight: 700;
+      padding: 4px 12px;
+      border-radius: 100px;
+    }
+    .tier-badge {
+      display: inline-block;
+      font-size: 12px; font-weight: 700;
+      padding: 4px 14px;
+      border-radius: 100px;
+      margin-bottom: 16px;
+    }
+    .tier-badge.free { background: var(--teal-dim); color: var(--teal); }
+    .tier-badge.premium { background: var(--gold-dim); color: #B8900A; }
+    .tier-badge.match { background: var(--brick-dim); color: var(--brick); }
+    .tier-name {
+      font-family: var(--font-display);
+      font-size: 22px; font-weight: 700;
+      color: var(--foreground);
+      margin-bottom: 4px;
+    }
+    .tier-phase {
+      font-size: 13px; color: var(--text-muted);
+      margin-bottom: 16px;
+    }
+    .tier-desc {
+      font-size: 14px; color: var(--text-sec);
+      line-height: 1.7;
+      margin-bottom: 20px;
+    }
+    .tier-features {
+      list-style: none;
+      display: flex; flex-direction: column; gap: 10px;
+    }
+    .tier-features li {
+      font-size: 14px;
+      color: var(--text);
+      display: flex; align-items: flex-start; gap: 8px;
+    }
+    .tier-features li::before {
+      content: '✓';
+      color: var(--teal);
+      font-weight: 700;
+      flex-shrink: 0;
+      margin-top: 1px;
+    }
+    .tier-cta {
+      display: block;
+      width: 100%;
+      margin-top: 24px;
+      padding: 14px;
+      border-radius: 100px;
+      font-size: 15px; font-weight: 600;
+      text-align: center;
+      cursor: pointer;
+      font-family: var(--font-body);
+      transition: all 0.2s;
+      text-decoration: none;
+    }
+    .tier-cta.primary {
+      background: var(--brick);
+      color: #ffffff;
+      border: none;
+    }
+    .tier-cta.primary:hover { background: var(--brick-hover); }
+    .tier-cta.outline {
+      background: transparent;
+      color: var(--foreground);
+      border: 1.5px solid var(--border-hover);
+    }
+    .tier-cta.outline:hover { border-color: var(--foreground); }
+
+    /* ── AI FEATURES (Superpower-style alternating) ── */
+    .feature-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 60px;
+      align-items: center;
+      margin-top: 80px;
+    }
+    .feature-row.reverse .feature-visual { order: -1; }
+    .feature-visual {
+      background: var(--bg-section-alt);
+      border-radius: 20px;
+      aspect-ratio: 4/3;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 80px;
+      border: 1px solid var(--border);
+      overflow: hidden;
+      position: relative;
+    }
+    .feature-visual-inner {
+      text-align: center;
+    }
+    .feature-visual-label {
+      font-size: 14px;
+      color: var(--text-sec);
+      margin-top: 8px;
+    }
+    .feature-tag {
+      display: inline-block;
+      font-size: 11px; font-weight: 700;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      padding: 4px 12px;
+      border-radius: 100px;
+      margin-bottom: 16px;
+    }
+    .feature-tag.ai { background: var(--gold-dim); color: #B8900A; }
+    .feature-title {
+      font-family: var(--font-display);
+      font-size: clamp(24px, 3vw, 32px);
+      font-weight: 700;
+      line-height: 1.3;
+      letter-spacing: -0.02em;
+      color: var(--foreground);
+    }
+    .feature-desc {
+      font-size: 15px;
+      color: var(--text-sec);
+      margin-top: 16px;
+      line-height: 1.8;
+    }
+    .feature-list {
+      list-style: none;
+      margin-top: 20px;
+      display: flex; flex-direction: column; gap: 8px;
+    }
+    .feature-list li {
+      font-size: 14px; color: var(--text);
+      display: flex; align-items: center; gap: 8px;
+    }
+    .feature-list li::before {
+      content: '';
+      width: 6px; height: 6px;
+      background: var(--gold);
+      border-radius: 50%;
+      flex-shrink: 0;
+    }
+
+    /* ── HOW IT WORKS (Superpower-style 3-step) ── */
+    .steps-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 32px;
+      margin-top: 48px;
+    }
+    .step-card {
+      text-align: center;
+      padding: 32px 24px;
+    }
+    .step-num {
+      display: inline-flex; align-items: center; justify-content: center;
+      width: 48px; height: 48px;
+      border-radius: 50%;
+      background: var(--gold-dim);
+      color: var(--gold);
+      font-family: var(--font-display);
+      font-size: 20px; font-weight: 700;
+      margin-bottom: 20px;
+    }
+    .step-card h3 {
+      font-family: var(--font-display);
+      font-size: 18px; font-weight: 700;
+      color: var(--foreground);
+      margin-bottom: 8px;
+    }
+    .step-card p {
+      font-size: 14px;
+      color: var(--text-sec);
+      line-height: 1.7;
+    }
+
+    /* ── CASES ── */
+    .cases-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 24px;
+      margin-top: 48px;
+    }
+    .case-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      overflow: hidden;
+      transition: transform 0.3s, box-shadow 0.3s;
+    }
+    .case-card:hover {
+      transform: translateY(-4px);
+      box-shadow: 0 12px 40px rgba(26,18,8,0.08);
+    }
+    .case-img {
+      height: 180px;
+      background: var(--bg-section-alt);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 60px;
+      position: relative;
+    }
+    .case-tag {
+      position: absolute; top: 12px; left: 12px;
+      background: var(--brick);
+      color: #fff;
+      font-size: 11px; font-weight: 700;
+      padding: 4px 10px;
+      border-radius: 100px;
+    }
+    .case-body { padding: 24px; }
+    .case-body h3 {
+      font-family: var(--font-display);
+      font-size: 18px; font-weight: 700;
+      color: var(--foreground);
+      margin-bottom: 8px;
+    }
+    .case-body p {
+      font-size: 14px; color: var(--text-sec);
+      line-height: 1.7;
+      margin-bottom: 16px;
+    }
+    .case-stats {
+      display: flex; gap: 16px;
+      padding-top: 16px;
+      border-top: 1px solid var(--border);
+    }
+    .case-stat { flex: 1; }
+    .case-stat-val {
+      font-family: var(--font-display);
+      font-size: 16px; font-weight: 700;
+      color: var(--foreground);
+    }
+    .case-stat-label {
+      font-size: 11px;
+      color: var(--text-muted);
+      margin-top: 2px;
+    }
+
+    /* ── TEAM ── */
+    .team-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 24px;
+      margin-top: 48px;
+    }
+    .team-card {
+      text-align: center;
+      padding: 32px 20px;
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      transition: transform 0.3s, box-shadow 0.3s;
+    }
+    .team-card:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 28px rgba(26,18,8,0.06);
+    }
+    .team-avatar {
+      width: 64px; height: 64px;
+      border-radius: 50%;
+      background: var(--bg-section-alt);
+      display: flex; align-items: center; justify-content: center;
+      margin: 0 auto 16px;
+      font-size: 28px;
+    }
+    .team-card h3 {
+      font-family: var(--font-display);
+      font-size: 17px; font-weight: 700;
+      color: var(--foreground);
+    }
+    .team-card .role {
+      font-size: 13px;
+      color: var(--brick);
+      font-weight: 600;
+      margin: 4px 0 8px;
+    }
+    .team-card p {
+      font-size: 13px;
+      color: var(--text-sec);
+      line-height: 1.6;
+    }
+
+    /* ── DARK CTA SECTION (Superpower-style) ── */
+    .cta-dark {
+      background: var(--bg-dark);
+      padding: var(--section-pad);
+      text-align: center;
+    }
+    .cta-dark .section-label { color: var(--gold); }
+    .cta-dark .section-title { color: #fff; }
+    .cta-dark .section-desc { color: var(--text-sec-dark); margin: 16px auto 0; }
+    .cta-dark .btn-primary { margin-top: 32px; }
+
+    /* ── FORM SECTION ── */
+    .form-section {
+      background: var(--bg-section-alt);
+      padding: var(--section-pad);
+    }
+    .form-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      padding: 40px 36px;
+      max-width: 560px;
+      margin: 40px auto 0;
+    }
+    .form-row { margin-bottom: 20px; }
+    .form-row label {
+      display: block;
+      font-size: 13px; font-weight: 600;
+      color: var(--foreground);
+      margin-bottom: 6px;
+    }
+    .form-row input,
+    .form-row select,
+    .form-row textarea {
+      width: 100%;
+      padding: 12px 16px;
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      font-size: 15px;
+      font-family: var(--font-body);
+      color: var(--foreground);
+      transition: border-color 0.2s;
+    }
+    .form-row input::placeholder,
+    .form-row textarea::placeholder { color: var(--text-muted); }
+    .form-row input:focus,
+    .form-row select:focus,
+    .form-row textarea:focus { border-color: var(--gold); outline: none; }
+    .form-row textarea { resize: vertical; min-height: 100px; }
+    .form-submit {
+      width: 100%;
+      padding: 16px;
+      background: var(--brick);
+      color: #ffffff;
+      border: none; border-radius: 100px;
+      font-size: 16px; font-weight: 600;
+      cursor: pointer;
+      font-family: var(--font-body);
+      transition: all 0.2s;
+    }
+    .form-submit:hover {
+      background: var(--brick-hover);
+      transform: translateY(-1px);
+      box-shadow: 0 8px 24px rgba(203,59,27,0.25);
+    }
+    .form-note {
+      margin-top: 16px;
+      font-size: 12px;
+      color: var(--text-muted);
+      text-align: center;
+    }
+
+    /* ── FOOTER ── */
+    .footer {
+      padding: 48px clamp(20px, 5vw, 48px) 32px;
+      border-top: 1px solid var(--border);
+    }
+    .footer-inner {
+      max-width: var(--max-w);
+      margin: 0 auto;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap; gap: 16px;
+    }
+    .footer-brand {
+      font-family: var(--font-display);
+      font-size: 14px; font-weight: 600;
+      color: var(--text-sec);
+    }
+    .footer-links { display: flex; gap: 24px; }
+    .footer-links a {
+      color: var(--text-muted);
+      text-decoration: none;
+      font-size: 13px;
+      transition: color 0.2s;
+    }
+    .footer-links a:hover { color: var(--foreground); }
+
+    /* ── MODAL ── */
+    .modal-overlay {
+      display: none;
+      position: fixed; inset: 0;
+      background: rgba(0,0,0,0.5);
+      backdrop-filter: blur(8px);
+      z-index: 200;
+      align-items: center; justify-content: center;
+    }
+    .modal-overlay.show { display: flex; }
+    .modal {
+      background: #FFFFFF;
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      padding: 48px 40px;
+      max-width: 420px;
+      width: 90%;
+      position: relative;
+      box-shadow: 0 24px 64px rgba(26,18,8,0.15);
+    }
+    .modal-close {
+      position: absolute; top: 16px; right: 16px;
+      background: none; border: none;
+      font-size: 24px; cursor: pointer;
+      color: var(--text-muted);
+    }
+    .modal-close:hover { color: var(--foreground); }
+    .modal h2 {
+      font-family: var(--font-display);
+      font-size: 24px; font-weight: 700;
+      color: var(--foreground);
+      margin-bottom: 8px;
+    }
+    .modal .modal-sub {
+      font-size: 14px; color: var(--text-sec);
+      margin-bottom: 28px;
+    }
+    .modal .form-row input {
+      background: var(--bg);
+      border: 1px solid var(--border);
+    }
+    .modal-submit {
+      width: 100%;
+      padding: 14px;
+      background: var(--brick);
+      color: #ffffff;
+      border: none; border-radius: 100px;
+      font-size: 15px; font-weight: 600;
+      cursor: pointer;
+      font-family: var(--font-body);
+      transition: background 0.2s;
+    }
+    .modal-submit:hover { background: var(--brick-hover); }
+    .modal-switch {
+      text-align: center;
+      margin-top: 20px;
+      font-size: 13px;
+      color: var(--text-sec);
+    }
+    .modal-switch a {
+      color: var(--brick);
+      text-decoration: none;
+      font-weight: 600;
+    }
+
+    /* ── RESPONSIVE ── */
+    @media (max-width: 900px) {
+      .tier-grid { grid-template-columns: 1fr; max-width: 400px; margin-left: auto; margin-right: auto; }
+      .feature-row { grid-template-columns: 1fr; gap: 32px; }
+      .feature-row.reverse .feature-visual { order: 0; }
+      .steps-grid { grid-template-columns: 1fr; max-width: 400px; margin-left: auto; margin-right: auto; }
+      .cases-grid { grid-template-columns: 1fr; }
+      .team-grid { grid-template-columns: repeat(2, 1fr); }
+    }
+    @media (max-width: 768px) {
+      .nav-links { display: none; }
+      .nav-toggle { display: block; }
+      .nav-links.open {
+        display: flex; flex-direction: column;
+        position: fixed; top: var(--nav-h); left: 0; right: 0;
+        background: rgba(248,245,234,0.96);
+        backdrop-filter: blur(20px);
+        padding: 24px;
+        border-bottom: 1px solid var(--border);
+        gap: 16px; z-index: 100;
+      }
+      .hero { padding: 120px 20px 60px; }
+      .hero h1 { font-size: clamp(32px, 8vw, 48px); }
+      .form-card { padding: 28px 20px; }
+    }
+    @media (max-width: 480px) {
+      .team-grid { grid-template-columns: 1fr; }
+      .stats-inner { flex-direction: column; gap: 20px; }
+      .hero-actions { flex-direction: column; align-items: center; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- ═══ NAV ═══ -->
+<nav class="nav" id="navbar">
+  <a href="#" class="nav-brand">
+    <img src="../assets/images/logo-dark.png" alt="齊家厝" />
+  </a>
+  <div class="nav-links" id="navLinks">
+    <a href="#how" class="nav-link">服務流程</a>
+    <a href="#features" class="nav-link">AI 功能</a>
+    <a href="#tiers" class="nav-link">會員方案</a>
+    <a href="#cases" class="nav-link">成功案例</a>
+    <a href="#team" class="nav-link">專業團隊</a>
+    <button class="nav-cta" onclick="openModal('login')">開始使用</button>
+  </div>
+  <button class="nav-toggle" onclick="toggleNav()">☰</button>
+</nav>
+
+<!-- ═══ HERO ═══ -->
+<div class="hero-wrapper">
+  <div class="hero-bg">
+    <video autoplay loop muted playsinline>
+      <source src="../assets/videos/cover.mp4" type="video/mp4" />
+    </video>
+    <div class="hero-bg-placeholder"></div>
+  </div>
+  <div class="hero-overlay"></div>
+
+  <section class="hero">
+    <h1 class="animate-fr">
+      從理解到行動<br/><em>AI 陪你走每一步</em>
+    </h1>
+    <p class="hero-sub animate-fr-d1">
+      都更不是跳進未知，而是一場有專業陪伴的旅程。<br/>
+      齊家厝用 AI 與跨領域團隊，讓 50 歲以上的屋主<br/>
+      從「害怕」到「有掌控感」，安心做出人生最大決定。
+    </p>
+    <div class="hero-actions animate-fr-d2">
+      <a href="#contact" class="btn-primary">免費風險快篩 →</a>
+      <a href="#how" class="btn-secondary">了解怎麼運作</a>
+    </div>
+  </section>
+</div>
+
+<!-- ═══ STATS ═══ -->
+<div class="stats-bar">
+  <div class="stats-inner fade-up">
+    <div class="stat-item">
+      <div class="stat-num">150 萬+</div>
+      <div class="stat-label">雙北屋齡逾 30 年住宅</div>
+    </div>
+    <div class="stat-item">
+      <div class="stat-num">&lt;10%</div>
+      <div class="stat-label">傳統都更成功率</div>
+    </div>
+    <div class="stat-item">
+      <div class="stat-num">6 個月</div>
+      <div class="stat-label">平台最快整合案例</div>
+    </div>
+    <div class="stat-item">
+      <div class="stat-num">114212560</div>
+      <div class="stat-label">國家專利認證編號</div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ QUOTE ═══ -->
+<div class="quote-section fade-up">
+  <p class="quote-text">
+    「別人是幫你蓋房子，<br/><em>齊家厝是陪你做人生最大決定。</em>」
+  </p>
+  <p class="quote-attr">— 齊家厝 U-SAFE 核心理念</p>
+</div>
+
+<!-- ═══ HOW IT WORKS ═══ -->
+<section id="how" style="background: var(--bg-section-alt);">
+  <div class="section-inner">
+    <span class="section-label">How It Works</span>
+    <h2 class="section-title fade-up">您的都更旅程</h2>
+    <p class="section-desc fade-up">
+      不需要懂法規、不需要自己找建商。<br/>
+      跟著三個階段，自然從「我不懂」走到「我願意行動」。
+    </p>
+    <div class="steps-grid">
+      <div class="step-card fade-up">
+        <div class="step-num">1</div>
+        <h3>理解期 — 降低恐懼</h3>
+        <p>免費加入，AI 快篩您的房屋風險等級，瀏覽知識庫與成功案例，建立「我家好像需要處理」的意識。</p>
+      </div>
+      <div class="step-card fade-up">
+        <div class="step-num">2</div>
+        <h3>評估期 — 想清楚</h3>
+        <p>升級後解鎖詳細 AI 報告、情境模擬「重建 vs 不重建」10 年對比，還有家族溝通助手幫你搞定家人。</p>
+      </div>
+      <div class="step-card fade-up">
+        <div class="step-num">3</div>
+        <h3>行動期 — 安全啟動</h3>
+        <p>AI 為您匹配最適合的建商，專案管理全程跟進，合約白話翻譯，投票紀錄區塊鏈存證。</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══ AI FEATURES ═══ -->
+<section id="features">
+  <div class="section-inner">
+    <span class="section-label">AI-Powered</span>
+    <h2 class="section-title fade-up">AI 不是噱頭，是你的安全感</h2>
+    <p class="section-desc fade-up">
+      每一個 AI 功能都對應屋主最真實的恐懼與需求。
+    </p>
+
+    <!-- Feature 1 -->
+    <div class="feature-row fade-up">
+      <div>
+        <span class="feature-tag ai">免費功能</span>
+        <h3 class="feature-title">AI 房屋風險快篩</h3>
+        <p class="feature-desc">
+          輸入屋齡、地段、結構、房屋型態，AI 即時判斷危老資格、都更可能性、海砂與液化風險。
+          不需要看懂法規，只需要回答幾個問題。
+        </p>
+        <ul class="feature-list">
+          <li>風險等級：低 / 中 / 高，一目瞭然</li>
+          <li>政府獎勵初估，知道你能拿多少</li>
+          <li>不強迫升級，先讓你安心理解</li>
+        </ul>
+      </div>
+      <div class="feature-visual">
+        <div class="feature-visual-inner">
+          🏠
+          <div class="feature-visual-label">風險快篩報告</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Feature 2 -->
+    <div class="feature-row reverse fade-up">
+      <div>
+        <span class="feature-tag ai">高級功能</span>
+        <h3 class="feature-title">AI 情境模擬 + 家族溝通助手</h3>
+        <p class="feature-desc">
+          「不重建 vs 重建」10 年後的差異是什麼？用數據說服自己，也說服家人。
+          AI 自動生成家人說明會簡報與溝通話術。
+        </p>
+        <ul class="feature-list">
+          <li>10 年房價 + 安全對比視覺化圖表</li>
+          <li>一鍵生成家族說明會簡報</li>
+          <li>針對不同意見的家人，提供溝通建議</li>
+        </ul>
+      </div>
+      <div class="feature-visual">
+        <div class="feature-visual-inner">
+          📊
+          <div class="feature-visual-label">情境模擬比較</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Feature 3 -->
+    <div class="feature-row fade-up">
+      <div>
+        <span class="feature-tag ai">媒合功能</span>
+        <h3 class="feature-title">AI 建商匹配 + 合約解讀</h3>
+        <p class="feature-desc">
+          根據地區、案件規模、屋主需求，AI 從合作建商中推薦最適合的選項。
+          合建契約看不懂？AI 幫你白話翻譯每一條。
+        </p>
+        <ul class="feature-list">
+          <li>建商匹配度評分，不再盲選</li>
+          <li>合約逐條白話翻譯，降低被騙風險</li>
+          <li>投票紀錄 + 決議上鏈，防止事後糾紛</li>
+        </ul>
+      </div>
+      <div class="feature-visual">
+        <div class="feature-visual-inner">
+          🤝
+          <div class="feature-visual-label">智能建商匹配</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══ MEMBERSHIP TIERS ═══ -->
+<section id="tiers" style="background: var(--bg-section-alt);">
+  <div class="section-inner" style="text-align: center;">
+    <span class="section-label">Membership</span>
+    <h2 class="section-title fade-up">選擇適合您的方案</h2>
+    <p class="section-desc fade-up" style="margin: 16px auto 0;">
+      不急著決定。從免費開始，準備好了再升級。
+    </p>
+    <div class="tier-grid fade-up">
+      <!-- Free -->
+      <div class="tier-card">
+        <span class="tier-badge free">🟢 免費</span>
+        <div class="tier-name">免費會員</div>
+        <div class="tier-phase">理解期 — 讓屋主敢開始了解</div>
+        <p class="tier-desc">降低恐懼、降低門檻。先陪你理解，不急著談重建。</p>
+        <ul class="tier-features">
+          <li>AI 房屋風險快篩（低/中/高）</li>
+          <li>AI 小博士問答（白話解釋都更）</li>
+          <li>可行性分析初估版</li>
+          <li>基本知識庫 + 成功案例</li>
+          <li>政府獎勵初估</li>
+        </ul>
+        <a href="#contact" class="tier-cta outline">免費開始</a>
+      </div>
+      <!-- Premium -->
+      <div class="tier-card featured">
+        <span class="tier-badge premium">🟡 高級</span>
+        <div class="tier-name">高級會員</div>
+        <div class="tier-phase">評估期 — 幫你想清楚</div>
+        <p class="tier-desc">不是要你決定，是幫你想清楚。用數據做出有信心的判斷。</p>
+        <ul class="tier-features">
+          <li>完整可行性分析 + 做/不做建議</li>
+          <li>AI 情境模擬：10 年對比</li>
+          <li>AI 家族溝通助手 🔥</li>
+          <li>結構風險深度報告 + 視覺化</li>
+          <li>社區風險儀表板</li>
+          <li>文件管理 + 同意書範本</li>
+        </ul>
+        <button class="tier-cta primary" onclick="openModal('register')">升級高級會員</button>
+      </div>
+      <!-- Match -->
+      <div class="tier-card">
+        <span class="tier-badge match">🔴 媒合</span>
+        <div class="tier-name">媒合會員</div>
+        <div class="tier-phase">行動期 — 全程陪你走</div>
+        <p class="tier-desc">不是丟給建商，是全程陪你走。安全啟動都更流程。</p>
+        <ul class="tier-features">
+          <li>AI 建商匹配系統</li>
+          <li>AI 整合進度管理</li>
+          <li>AI 會議助理（自動紀錄 + 追蹤）</li>
+          <li>AI 合約解讀（白話翻譯）</li>
+          <li>區塊鏈投票存證</li>
+          <li>自主更新會 + 線上簽署</li>
+        </ul>
+        <a href="#contact" class="tier-cta outline">了解媒合方案</a>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══ CTA DARK (Superpower-style) ═══ -->
+<div class="cta-dark">
+  <span class="section-label">用戶心理變化</span>
+  <h2 class="section-title fade-up" style="max-width: 700px; margin: 0 auto;">
+    從「我不懂、害怕」<br/>到「我可以決定」
+  </h2>
+  <p class="section-desc fade-up">
+    我不懂 → 免費會員降低恐懼<br/>
+    我開始懂 → 知識庫與 AI 小博士建立信任<br/>
+    我可以決定 → 高級會員提供決策工具<br/>
+    我願意行動 → 媒合會員安全啟動
+  </p>
+  <a href="#contact" class="btn-primary fade-up">免費風險快篩 →</a>
+</div>
+
+<!-- ═══ CASES ═══ -->
+<section id="cases">
+  <div class="section-inner">
+    <span class="section-label">Success Stories</span>
+    <h2 class="section-title fade-up">他們已經住進新家了</h2>
+    <p class="section-desc fade-up">每一個案例，都是一個家族的傳承故事。</p>
+    <div class="cases-grid">
+      <div class="case-card fade-up">
+        <div class="case-img">
+          🏢
+          <span class="case-tag">真實案例</span>
+        </div>
+        <div class="case-body">
+          <h3>信義敦化案</h3>
+          <p>三棟四層老公寓成功整合，蛻變為地上 12 層豪華大樓。原住戶資產價值翻倍成長。</p>
+          <div class="case-stats">
+            <div class="case-stat">
+              <div class="case-stat-val">6 個月</div>
+              <div class="case-stat-label">整合時間</div>
+            </div>
+            <div class="case-stat">
+              <div class="case-stat-val">100%</div>
+              <div class="case-stat-label">簽約率</div>
+            </div>
+            <div class="case-stat">
+              <div class="case-stat-val">元捷建設</div>
+              <div class="case-stat-label">合作建商</div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="case-card fade-up">
+        <div class="case-img">🏠</div>
+        <div class="case-body">
+          <h3>大安文青宅</h3>
+          <p>五層公寓社區，住戶平均年齡 62 歲。透過平台媒合潤泰創新，從評估到動工僅 14 個月。</p>
+          <div class="case-stats">
+            <div class="case-stat">
+              <div class="case-stat-val">14 個月</div>
+              <div class="case-stat-label">評估到動工</div>
+            </div>
+            <div class="case-stat">
+              <div class="case-stat-val">92%</div>
+              <div class="case-stat-label">住戶滿意度</div>
+            </div>
+            <div class="case-stat">
+              <div class="case-stat-val">潤泰創新</div>
+              <div class="case-stat-label">合作建商</div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="case-card fade-up">
+        <div class="case-img">🌊</div>
+        <div class="case-body">
+          <h3>中山河岸美宅</h3>
+          <p>河岸第一排老公寓群，危險等級高達 78%。整合後成為景觀豪宅，住戶資產增值 3 倍。</p>
+          <div class="case-stats">
+            <div class="case-stat">
+              <div class="case-stat-val">10 個月</div>
+              <div class="case-stat-label">整合時間</div>
+            </div>
+            <div class="case-stat">
+              <div class="case-stat-val">3 倍</div>
+              <div class="case-stat-label">資產增值</div>
+            </div>
+            <div class="case-stat">
+              <div class="case-stat-val">興富發建設</div>
+              <div class="case-stat-label">合作建商</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══ TEAM ═══ -->
+<section id="team" style="background: var(--bg-section-alt);">
+  <div class="section-inner" style="text-align: center;">
+    <span class="section-label">Expert Team</span>
+    <h2 class="section-title fade-up">跨領域專業團隊</h2>
+    <p class="section-desc fade-up" style="margin: 16px auto 0;">
+      每一個環節都有該領域的頂尖專家把關。
+    </p>
+    <div class="team-grid">
+      <div class="team-card fade-up">
+        <div class="team-avatar">🏗️</div>
+        <h3>李明遠</h3>
+        <div class="role">建築師</div>
+        <p>20 年都更經驗，主導超過 50 件改建案</p>
+      </div>
+      <div class="team-card fade-up">
+        <div class="team-avatar">🔬</div>
+        <h3>林朝清</h3>
+        <div class="role">結構技師</div>
+        <p>國家級耐震標章審查委員</p>
+      </div>
+      <div class="team-card fade-up">
+        <div class="team-avatar">📊</div>
+        <h3>鐘少佑</h3>
+        <div class="role">不動產估價師</div>
+        <p>精準評估資產價值與增值空間</p>
+      </div>
+      <div class="team-card fade-up">
+        <div class="team-avatar">⚙️</div>
+        <h3>王冠閔</h3>
+        <div class="role">PCM 工程師</div>
+        <p>全案工程管理與品質監控</p>
+      </div>
+      <div class="team-card fade-up">
+        <div class="team-avatar">🎓</div>
+        <h3>林宏澔</h3>
+        <div class="role">教授顧問</div>
+        <p>學術研究支撐，確保方案科學依據</p>
+      </div>
+      <div class="team-card fade-up">
+        <div class="team-avatar">⚖️</div>
+        <h3>劉文瑞</h3>
+        <div class="role">律師</div>
+        <p>合約審查與住戶權益法律保障</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══ CONTACT FORM ═══ -->
+<section class="form-section" id="contact">
+  <div class="section-inner" style="text-align: center;">
+    <span class="section-label">Free Consultation</span>
+    <h2 class="section-title fade-up">免費風險快篩，從這裡開始</h2>
+    <p class="section-desc fade-up" style="margin: 16px auto 0;">
+      留下資訊，我們會在 48 小時內提供您的房屋初步風險評估。
+    </p>
+    <div class="form-card fade-up">
+      <div class="form-row">
+        <label>您的姓名</label>
+        <input type="text" placeholder="例：王大明" />
+      </div>
+      <div class="form-row">
+        <label>聯絡電話</label>
+        <input type="tel" placeholder="例：0912-345-678" />
+      </div>
+      <div class="form-row">
+        <label>房屋所在區域</label>
+        <select>
+          <option value="" disabled selected>請選擇區域</option>
+          <option>台北市 — 大安區</option>
+          <option>台北市 — 信義區</option>
+          <option>台北市 — 中山區</option>
+          <option>台北市 — 松山區</option>
+          <option>台北市 — 中正區</option>
+          <option>台北市 — 萬華區</option>
+          <option>台北市 — 其他</option>
+          <option>新北市 — 板橋區</option>
+          <option>新北市 — 永和區</option>
+          <option>新北市 — 中和區</option>
+          <option>新北市 — 新店區</option>
+          <option>新北市 — 三重區</option>
+          <option>新北市 — 其他</option>
+          <option>其他縣市</option>
+        </select>
+      </div>
+      <div class="form-row">
+        <label>房屋大約屋齡</label>
+        <select>
+          <option value="" disabled selected>請選擇屋齡</option>
+          <option>20-30 年</option>
+          <option>30-40 年</option>
+          <option>40-50 年</option>
+          <option>50 年以上</option>
+        </select>
+      </div>
+      <div class="form-row">
+        <label>想了解的事項（選填）</label>
+        <textarea placeholder="例：我家是四層樓公寓，想了解是否符合都更條件..."></textarea>
+      </div>
+      <button class="form-submit" onclick="submitForm()">送出免費快篩 →</button>
+      <p class="form-note">我們重視您的隱私，資料僅用於本次諮詢服務。</p>
+    </div>
+  </div>
+</section>
+
+<!-- ═══ FOOTER ═══ -->
+<footer class="footer">
+  <div class="footer-inner">
+    <div class="footer-brand">齊家厝 U-SAFE Cloud &copy; 2026　台灣危老安全建築經理有限公司</div>
+    <div class="footer-links">
+      <a href="#">隱私政策</a>
+      <a href="#">服務條款</a>
+      <a href="#">聯絡我們</a>
+    </div>
+  </div>
+</footer>
+
+<!-- ═══ LOGIN / REGISTER MODAL ═══ -->
+<div class="modal-overlay" id="modalOverlay" onclick="closeModal(event)">
+  <div class="modal" onclick="event.stopPropagation()">
+    <button class="modal-close" onclick="closeModal()">&times;</button>
+    <div id="modal-login">
+      <h2>歡迎回來</h2>
+      <p class="modal-sub">登入您的齊家厝帳號</p>
+      <div class="form-row">
+        <label>電子信箱</label>
+        <input type="email" placeholder="example@email.com" />
+      </div>
+      <div class="form-row">
+        <label>密碼</label>
+        <input type="password" placeholder="請輸入密碼" />
+      </div>
+      <button class="modal-submit" onclick="handleLogin()">登入</button>
+      <div class="modal-switch">
+        還沒有帳號？<a href="#" onclick="switchModal('register'); return false;">免費註冊</a>
+      </div>
+    </div>
+    <div id="modal-register" style="display:none">
+      <h2>加入齊家厝</h2>
+      <p class="modal-sub">建立帳號，開始您的老屋新生之旅</p>
+      <div class="form-row">
+        <label>您的姓名</label>
+        <input type="text" placeholder="例：王大明" />
+      </div>
+      <div class="form-row">
+        <label>電子信箱</label>
+        <input type="email" placeholder="example@email.com" />
+      </div>
+      <div class="form-row">
+        <label>設定密碼</label>
+        <input type="password" placeholder="至少 8 個字元" />
+      </div>
+      <button class="modal-submit" onclick="handleRegister()">建立帳號</button>
+      <div class="modal-switch">
+        已經有帳號？<a href="#" onclick="switchModal('login'); return false;">登入</a>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  /* ══ Scroll animations ══ */
+  const observer = new IntersectionObserver((entries) => {
+    entries.forEach(entry => {
+      if (entry.isIntersecting) entry.target.classList.add('visible');
+    });
+  }, { threshold: 0.1, rootMargin: '0px 0px -40px 0px' });
+  document.querySelectorAll('.fade-up').forEach(el => observer.observe(el));
+
+  /* ══ Nav scroll effect ══ */
+  const navbar = document.getElementById('navbar');
+  window.addEventListener('scroll', () => {
+    navbar.classList.toggle('scrolled', window.scrollY > 60);
+  });
+
+  /* ══ Nav active state on scroll ══ */
+  const sections = document.querySelectorAll('section[id]');
+  window.addEventListener('scroll', () => {
+    const scrollY = window.scrollY + 200;
+    sections.forEach(sec => {
+      const top = sec.offsetTop;
+      const h = sec.offsetHeight;
+      const id = sec.getAttribute('id');
+      const link = document.querySelector(`.nav-link[href="#${id}"]`);
+      if (link) {
+        if (scrollY >= top && scrollY < top + h) {
+          document.querySelectorAll('.nav-link').forEach(l => l.classList.remove('active'));
+          link.classList.add('active');
+        }
+      }
+    });
+  });
+
+  /* ══ Mobile nav ══ */
+  function toggleNav() {
+    document.getElementById('navLinks').classList.toggle('open');
+  }
+  document.querySelectorAll('.nav-link').forEach(link => {
+    link.addEventListener('click', () => {
+      document.getElementById('navLinks').classList.remove('open');
+    });
+  });
+
+  /* ══ Modal ══ */
+  function openModal(type) {
+    document.getElementById('modalOverlay').classList.add('show');
+    switchModal(type);
+    document.body.style.overflow = 'hidden';
+  }
+  function closeModal(e) {
+    if (e && e.target !== e.currentTarget) return;
+    document.getElementById('modalOverlay').classList.remove('show');
+    document.body.style.overflow = '';
+  }
+  function switchModal(type) {
+    document.getElementById('modal-login').style.display = type === 'login' ? '' : 'none';
+    document.getElementById('modal-register').style.display = type === 'register' ? '' : 'none';
+  }
+
+  /* ══ Demo handlers ══ */
+  function handleLogin() {
+    alert('Demo 模式：登入成功！\n（帳號：demo@usafe.tw / 密碼：usafe2026）');
+    closeModal();
+  }
+  function handleRegister() {
+    alert('Demo 模式：註冊成功！歡迎加入齊家厝。');
+    closeModal();
+  }
+  function submitForm() {
+    alert('感謝您！我們的專業顧問將在 48 小時內提供您的免費風險快篩報告。');
+  }
+</script>
+</body>
+</html>

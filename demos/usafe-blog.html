@@ -1,0 +1,452 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>齊家厝 U-SAFE — 屋主故事</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+TC:wght@400;600;700;900&family=Noto+Sans+TC:wght@300;400;500;600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --font-serif:  "Noto Serif TC", serif;
+      --font-sans:   "Noto Sans TC", "Inter", sans-serif;
+      --gold:        #C8A75D;
+      --gold-bright: #FFB200;
+      --gold-dim:    rgba(200,167,93,0.12);
+      --brick:       #CB3B1B;
+      --brick-h:     #AB3418;
+      --teal:        #2AA39F;
+      --sky:         #4A90D9;
+      --ink:         #1A1208;
+      --cta:         #C8A75D;
+      --cta-h:       #A98C4E;
+      --cta-shadow:  rgba(200,167,93,0.35);
+      --bg:          #FFFFFF;
+      --bg-alt:      #F5F5F5;
+      --bg-secondary:#D9D9D9;
+      --bg-card:     #FFFFFF;
+      --border-default: #E6E6E6;
+      --text:        #1A1208;
+      --text-2:      rgba(26,18,8,0.55);
+      --text-3:      rgba(26,18,8,0.38);
+      --border:      rgba(26,18,8,0.08);
+      --max-w: 780px;
+      --nav-h: 64px;
+      --nav-h-sm: 52px;
+      --spring: cubic-bezier(0.34, 1.3, 0.64, 1);
+    }
+
+    *, *::before, *::after { margin:0; padding:0; box-sizing:border-box; }
+    html { scroll-behavior:smooth; -webkit-font-smoothing:antialiased; }
+    body { font-family:var(--font-sans); background:var(--bg); color:var(--text); overflow-x:hidden; font-size:17px; line-height:1.9; }
+
+    /* ───── PILL NAV ───── */
+    .nav {
+      position: fixed;
+      top: 16px; left: 50%; transform: translateX(-50%);
+      width: calc(100% - 48px);
+      max-width: 880px;
+      height: var(--nav-h);
+      background: rgba(255,255,255,0.72);
+      backdrop-filter: blur(24px) saturate(1.4);
+      -webkit-backdrop-filter: blur(24px) saturate(1.4);
+      border-radius: 100px;
+      border: 1px solid rgba(26,18,8,0.06);
+      box-shadow: 0 2px 16px rgba(26,18,8,0.06);
+      display: grid;
+      grid-template-columns: auto 1fr auto;
+      align-items: center;
+      padding: 0 20px;
+      z-index: 100;
+      transition:
+        width 0.5s cubic-bezier(0.34, 1.4, 0.64, 1),
+        max-width 0.5s cubic-bezier(0.34, 1.4, 0.64, 1),
+        height 0.4s var(--spring),
+        background 0.35s ease,
+        box-shadow 0.35s ease,
+        border-color 0.35s ease;
+    }
+    .nav.scrolled {
+      width: calc(100% - 160px);
+      max-width: 720px;
+      height: var(--nav-h-sm);
+      background: rgba(255,255,255,0.88);
+      box-shadow: 0 4px 24px rgba(26,18,8,0.08);
+      border-color: rgba(26,18,8,0.08);
+    }
+    .nav-brand { text-decoration: none; display: flex; align-items: center; }
+    .nav-brand img {
+      height: 26px; width: auto;
+      transition: height 0.4s var(--spring);
+    }
+    .nav.scrolled .nav-brand img { height: 20px; }
+    .nav-links-desktop {
+      display: flex; align-items: center; justify-content: center; gap: 24px;
+    }
+    .nav-links { display: none; }
+    .nav-link {
+      color: var(--text-2);
+      text-decoration: none;
+      font-size: 13px; font-weight: 500;
+      letter-spacing: -0.01em;
+      transition: color 0.2s;
+    }
+    .nav-link:hover { color: var(--text); }
+    .nav-cta {
+      display: inline-flex; align-items: center;
+      padding: 8px 20px;
+      background: var(--cta);
+      color: #fff;
+      border-radius: 100px;
+      font-size: 13px; font-weight: 600;
+      text-decoration: none; border: none; cursor: pointer;
+      font-family: var(--font-sans);
+      transition: background 0.2s, transform 0.15s;
+      justify-self: end;
+    }
+    .nav-cta:hover { background: var(--cta-h); transform: scale(1.02); }
+    .nav.scrolled .nav-cta { padding: 6px 16px; font-size: 12px; }
+    .nav-toggle {
+      display: none; background: none; border: none;
+      color: var(--text-2); font-size: 22px; cursor: pointer;
+    }
+    .mobile-close { display: none; }
+    .mobile-login { display: none; }
+
+    /* ───── PAGE HEADER ───── */
+    .page-header {
+      max-width: var(--max-w);
+      margin: 0 auto;
+      padding: calc(var(--nav-h) + 72px) 24px 0;
+      animation: fadeIn 0.8s ease-out both;
+    }
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(16px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+    .page-header h1 {
+      font-family: var(--font-serif);
+      font-size: 48px;
+      font-weight: 700;
+      color: var(--text);
+      line-height: 1.2;
+      margin-bottom: 12px;
+    }
+    .page-header .subtitle {
+      font-size: 18px;
+      color: var(--text-2);
+      line-height: 1.7;
+    }
+
+    /* ───── FILTER TABS ───── */
+    .filter-bar {
+      max-width: var(--max-w);
+      margin: 32px auto 0;
+      padding: 0 24px;
+      display: flex;
+      gap: 8px;
+      animation: fadeIn 0.8s ease-out 0.1s both;
+    }
+    .filter-btn {
+      padding: 8px 20px;
+      border-radius: 100px;
+      border: 1px solid var(--border-default);
+      background: var(--bg);
+      color: var(--text-2);
+      font-size: 14px;
+      font-weight: 500;
+      font-family: var(--font-sans);
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .filter-btn:hover {
+      border-color: var(--text-3);
+      color: var(--text);
+    }
+    .filter-btn.active {
+      background: var(--text);
+      color: var(--bg);
+      border-color: var(--text);
+    }
+
+    /* ───── BLOG LIST ───── */
+    .blog-list {
+      max-width: var(--max-w);
+      margin: 0 auto;
+      padding: 0 24px;
+      animation: fadeIn 0.8s ease-out 0.2s both;
+    }
+    .blog-item {
+      display: block;
+      padding: 56px 0;
+      border-bottom: 1px solid var(--border-default);
+      text-decoration: none;
+      color: inherit;
+      transition: opacity 0.2s;
+    }
+    .blog-item:first-child {
+      padding-top: 48px;
+    }
+    .blog-item:hover {
+      opacity: 0.7;
+    }
+    .blog-item-meta {
+      font-size: 14px;
+      color: var(--text-3);
+      margin-bottom: 16px;
+      letter-spacing: 0.01em;
+    }
+    .blog-item-title {
+      font-family: var(--font-serif);
+      font-size: 32px;
+      font-weight: 700;
+      line-height: 1.4;
+      color: var(--text);
+      margin-bottom: 14px;
+    }
+    .blog-item-excerpt {
+      font-size: 16px;
+      line-height: 1.8;
+      color: var(--text-2);
+      max-width: 640px;
+    }
+
+    /* ───── FOOTER ───── */
+    .site-footer {
+      max-width: var(--max-w);
+      margin: 0 auto;
+      padding: 60px 24px 40px;
+      text-align: center;
+      font-size: 13px;
+      color: var(--text-3);
+    }
+
+    /* ───── RESPONSIVE ───── */
+    @media (max-width: 768px) {
+      .nav {
+        top: 8px; width: calc(100% - 24px); padding: 0 16px;
+        grid-template-columns: 1fr auto;
+        height: 56px;
+      }
+      .nav-brand img { height: 32px; }
+      .nav.scrolled { width: calc(100% - 24px); max-width: none; height: 56px; }
+      .nav.scrolled .nav-brand img { height: 32px; }
+      .nav-cta { display: none; }
+      .nav-links-desktop { display: none; }
+
+      .nav-links.open {
+        display: flex !important; flex-direction: column;
+        position: fixed; inset: 0; margin: 0;
+        width: 100%; height: 100%;
+        background: #FFFFFF;
+        padding: 100px 32px 60px;
+        gap: 0; z-index: 9998;
+        align-items: flex-start; justify-content: flex-start;
+        border: none; border-radius: 0;
+        animation: menuOpen 0.6s ease-out forwards;
+        overflow-y: auto;
+      }
+      .mobile-close { display: none; }
+      .nav-links.open .mobile-close {
+        display: flex; align-items: center; justify-content: center;
+        position: absolute; top: 20px; right: 24px;
+        width: 48px; height: 48px; font-size: 32px;
+        color: var(--text); background: none; border: none;
+        cursor: pointer; z-index: 9999; border-radius: 50%;
+        transition: background 0.2s, color 0.2s;
+      }
+      .nav-links.open .mobile-close:hover { background: var(--bg-alt); color: var(--gold); }
+      .nav-links.closing { animation: menuClose 0.5s ease-in forwards; }
+      @keyframes menuOpen {
+        0%   { opacity: 0; filter: blur(8px); }
+        40%  { opacity: 0.7; filter: blur(3px); }
+        100% { opacity: 1; filter: none; }
+      }
+      @keyframes menuClose {
+        0%   { opacity: 1; filter: none; }
+        50%  { opacity: 0.5; filter: blur(4px); }
+        100% { opacity: 0; filter: blur(10px); visibility: hidden; }
+      }
+      .nav-links.open .nav-link {
+        font-size: 28px; font-family: var(--font-serif); font-weight: 700;
+        color: var(--text); padding: 20px 0;
+        border-bottom: 1px solid var(--border-default);
+        width: 100%; text-align: left;
+        opacity: 0; transform: translateY(20px);
+        animation: mobileMenuIn 0.8s var(--spring) forwards;
+        transition: color 0.2s, border-color 0.2s;
+      }
+      .nav-links.open .nav-link:hover { color: var(--gold); border-bottom-color: var(--gold); }
+      .nav-links.open .nav-link:nth-child(2) { animation-delay: 0.08s; }
+      .nav-links.open .nav-link:nth-child(3) { animation-delay: 0.16s; }
+      .nav-links.open .nav-link:nth-child(4) { animation-delay: 0.24s; }
+      .nav-links.open .nav-link:nth-child(5) { animation-delay: 0.32s; }
+      .nav-links.open .nav-link:nth-child(6) { animation-delay: 0.40s; }
+
+      .mobile-login { display: none; }
+      .nav-links.open .mobile-login {
+        display: block; font-size: 28px; font-family: var(--font-serif);
+        font-weight: 700; color: var(--cta); padding: 20px 0;
+        width: 100%; text-align: left; background: none; border: none;
+        cursor: pointer; opacity: 0; transform: translateY(20px);
+        animation: mobileMenuIn 0.8s var(--spring) 0.48s forwards;
+        transition: color 0.2s;
+      }
+      .nav-links.open .mobile-login:hover { color: var(--cta-h); }
+      @keyframes mobileMenuIn { to { opacity: 1; transform: translateY(0); } }
+
+      .nav-toggle {
+        display: block; z-index: 9999;
+        font-size: 24px; justify-self: end; position: relative;
+      }
+
+      .page-header { padding-top: calc(var(--nav-h) + 40px); }
+      .page-header h1 { font-size: 32px; }
+      .page-header .subtitle { font-size: 16px; }
+      .blog-item { padding: 40px 0; }
+      .blog-item:first-child { padding-top: 36px; }
+      .blog-item-title { font-size: 24px; }
+      .blog-item-excerpt { font-size: 15px; }
+      .filter-bar { margin-top: 24px; }
+    }
+  </style>
+</head>
+<body>
+
+<nav class="nav" id="navbar">
+  <a href="usafe-landing-v2.0.html" class="nav-brand">
+    <img src="../assets/images/logo-dark.png" alt="齊家厝 U-SAFE" />
+  </a>
+  <div class="nav-links-desktop">
+    <a class="nav-link" href="usafe-blog.html">屋主故事</a>
+    <a class="nav-link" href="usafe-landing-v2.0.html#before">老屋現況</a>
+    <a class="nav-link" href="usafe-landing-v2.0.html#journey">服務流程</a>
+    <a class="nav-link" href="usafe-landing-v2.0.html#after">成功案例</a>
+    <a class="nav-link" href="usafe-landing-v2.0.html#cta">免費諮詢</a>
+  </div>
+  <button class="nav-cta" onclick="window.location.href='usafe-dashboard.html'">登入</button>
+  <button class="nav-toggle" onclick="toggleNav()">&#9776;</button>
+</nav>
+<div class="nav-links" id="navLinks">
+  <button class="mobile-close" onclick="toggleNav()">&times;</button>
+  <a class="nav-link" href="usafe-blog.html" onclick="closeNav()">屋主故事</a>
+  <a class="nav-link" href="usafe-landing-v2.0.html#before" onclick="closeNav()">老屋現況</a>
+  <a class="nav-link" href="usafe-landing-v2.0.html#journey" onclick="closeNav()">服務流程</a>
+  <a class="nav-link" href="usafe-landing-v2.0.html#after" onclick="closeNav()">成功案例</a>
+  <a class="nav-link" href="usafe-landing-v2.0.html#cta" onclick="closeNav()">免費諮詢</a>
+  <button class="mobile-login" onclick="closeNav();window.location.href='usafe-dashboard.html';">登入 / 註冊</button>
+</div>
+
+<!-- ─── PAGE HEADER ─── -->
+<div class="page-header">
+  <h1>屋主故事</h1>
+  <p class="subtitle">真實的都更經歷，來自和您一樣的屋主</p>
+</div>
+
+<!-- ─── FILTER ─── -->
+<div class="filter-bar">
+  <button class="filter-btn active">全部</button>
+  <button class="filter-btn">成功案例</button>
+  <button class="filter-btn">都更知識</button>
+  <button class="filter-btn">屋主心聲</button>
+</div>
+
+<!-- ─── BLOG LIST ─── -->
+<div class="blog-list">
+
+  <a class="blog-item" href="usafe-story.html">
+    <div class="blog-item-meta">2024 年 12 月 &nbsp;·&nbsp; 成功案例, 都更故事</div>
+    <h2 class="blog-item-title">三代同堂的家，重獲新生</h2>
+    <p class="blog-item-excerpt">住在台北大安區的陳家，三代人在同一棟公寓裡生活了四十二年。從免費評估到完工入住，這是一個關於勇氣、信任與蛻變的真實故事。</p>
+  </a>
+
+  <a class="blog-item" href="#">
+    <div class="blog-item-meta">2024 年 10 月 &nbsp;·&nbsp; 都更知識</div>
+    <h2 class="blog-item-title">都更 vs 危老重建，到底差在哪？</h2>
+    <p class="blog-item-excerpt">很多屋主搞不清楚「都更」和「危老重建」的差別。其實這兩條路各有優缺點，適合的條件也不同。這篇文章用最簡單的方式，幫您一次搞懂。</p>
+  </a>
+
+  <a class="blog-item" href="#">
+    <div class="blog-item-meta">2024 年 9 月 &nbsp;·&nbsp; 屋主心聲</div>
+    <h2 class="blog-item-title">「我們等了十五年，終於等到了」</h2>
+    <p class="blog-item-excerpt">萬華區的王家，從最初聽到都更消息到真正動工，整整走了十五年。王伯伯說：「最難的不是流程，是讓所有鄰居都願意相信。」</p>
+  </a>
+
+  <a class="blog-item" href="#">
+    <div class="blog-item-meta">2024 年 8 月 &nbsp;·&nbsp; 都更知識</div>
+    <h2 class="blog-item-title">建商怎麼選？五個你必須知道的關鍵指標</h2>
+    <p class="blog-item-excerpt">選錯建商是都更最大的風險之一。過去實績、財務狀況、合約條件、溝通態度、售後服務——這五個面向，幫你做出不後悔的選擇。</p>
+  </a>
+
+  <a class="blog-item" href="#">
+    <div class="blog-item-meta">2024 年 7 月 &nbsp;·&nbsp; 成功案例</div>
+    <h2 class="blog-item-title">從反對到支持：一位里長的都更心路</h2>
+    <p class="blog-item-excerpt">中山區的張里長，一開始是社區裡最反對都更的人。但在親自了解流程、看到鄰里的改變後，他成了最積極推動的推手。</p>
+  </a>
+
+  <a class="blog-item" href="#">
+    <div class="blog-item-meta">2024 年 6 月 &nbsp;·&nbsp; 都更知識</div>
+    <h2 class="blog-item-title">都更流程全解析：從評估到入住要多久？</h2>
+    <p class="blog-item-excerpt">都更到底要花多少時間？每個階段在做什麼？這篇文章用一張清楚的時間表，讓你對整個流程有完整的認識。</p>
+  </a>
+
+  <a class="blog-item" href="#">
+    <div class="blog-item-meta">2024 年 5 月 &nbsp;·&nbsp; 屋主心聲</div>
+    <h2 class="blog-item-title">七十歲那年，我決定讓老房子退休</h2>
+    <p class="blog-item-excerpt">信義區的林奶奶，在七十歲生日那天做了一個決定。她說：「房子陪了我一輩子，但它也累了。是時候讓它和我一起，換一個新的開始。」</p>
+  </a>
+
+</div>
+
+<!-- ─── FOOTER ─── -->
+<footer class="site-footer">
+  &copy; 2026 齊家厝 U-SAFE. All rights reserved.
+</footer>
+
+<script>
+  /* ─── Nav shrink on scroll ─── */
+  (function() {
+    var nav = document.getElementById('navbar');
+    window.addEventListener('scroll', function() {
+      if (window.scrollY > 80) nav.classList.add('scrolled');
+      else nav.classList.remove('scrolled');
+    }, { passive: true });
+  })();
+
+  /* ─── Mobile nav toggle ─── */
+  function toggleNav() {
+    var nav = document.getElementById('navLinks');
+    var btn = document.querySelector('.nav-toggle');
+    if (nav.classList.contains('open')) {
+      nav.classList.add('closing');
+      btn.innerHTML = '&#9776;';
+      document.body.style.overflow = '';
+      setTimeout(function() { nav.classList.remove('open', 'closing'); }, 500);
+    } else {
+      nav.classList.add('open');
+      btn.innerHTML = '&times;';
+      document.body.style.overflow = 'hidden';
+    }
+  }
+  function closeNav() {
+    var nav = document.getElementById('navLinks');
+    var btn = document.querySelector('.nav-toggle');
+    if (!nav.classList.contains('open')) return;
+    nav.classList.add('closing');
+    btn.innerHTML = '&#9776;';
+    document.body.style.overflow = '';
+    setTimeout(function() { nav.classList.remove('open', 'closing'); }, 500);
+  }
+
+  /* ─── Filter tabs (visual only) ─── */
+  document.querySelectorAll('.filter-btn').forEach(function(btn) {
+    btn.addEventListener('click', function() {
+      document.querySelectorAll('.filter-btn').forEach(function(b) { b.classList.remove('active'); });
+      btn.classList.add('active');
+    });
+  });
+</script>
+
+</body>
+</html>

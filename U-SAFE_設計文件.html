@@ -1,0 +1,2625 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>U-SAFE Cloud 設計文件</title>
+  <style>
+    /* ══ DESIGN TOKENS — 齊家厝 Brand ══════════
+       Gold Ochre   #C8A75D · Brick Red  #CB3B1B
+       Warm Ink     #1A1208 · Parchment  #FFFBEE
+       ── Matched to Claude Code Docs layout ──
+    ═════════════════════════════════════════ */
+    :root {
+      --accent:        #C8A75D;
+      --accent-hover:  #b8923d;
+      --accent-dim:    rgba(200,167,93,0.13);
+      --accent-border: rgba(200,167,93,0.32);
+
+      --green:         #CB3B1B;
+      --green-dim:     rgba(203,59,27,0.10);
+      --green-border:  rgba(203,59,27,0.28);
+
+      --pad:   0px;
+      --nav-h: 64px;   /* topnav + 上下 padding + border */
+      --topnav-h: 64px;
+      --sidebar-w: 288px;
+      --toc-w: 304px;
+      --max-shell: 1472px;
+      --shell-pad: 32px;  /* 外殼左右 padding */
+
+      /* Spring easing — 自然彈性曲線，帶微量 overshoot */
+      --spring: linear(
+        0, 0.006, 0.025 2.8%, 0.101 6.1%, 0.539 18.9%, 0.721 25.3%,
+        0.849 31.5%, 0.937 38.1%, 0.968 41.8%, 0.991 45.7%,
+        1.006 50.1%, 1.015 55%, 1.017 63.9%, 1.001 85.6%, 1
+      );
+      /* Spring (soft) — 較溫和的彈性，用於微交互 hover 等 */
+      --spring-soft: linear(
+        0, 0.011, 0.044 3.3%, 0.175 7.2%, 0.756 21.5%, 0.875 27%,
+        0.956 33.5%, 0.994 40.2%, 1.007 50.8%, 1.002 72.2%, 1
+      );
+    }
+
+    /* ── DARK (default) — #09090b base like Claude Code Docs ── */
+    :root, [data-theme="dark"] {
+      --bg:      #2c2c2c;
+      --bg-card: #333333;
+      --bg-hover:#3a3a3a;
+      --border:  rgba(255,255,255,0.10);
+      --border2: rgba(255,255,255,0.15);
+      --nav-bg:  rgba(44,44,44,0.55);
+      --th-bg:   rgba(255,255,255,0.04);
+
+      --t1: rgba(255,255,255,0.90);  /* text-primary */
+      --t2: rgba(255,255,255,0.70);  /* text-secondary */
+      --t3: rgba(255,255,255,0.60);  /* text-tertiary — body default */
+      --t4: rgba(255,255,255,0.50);  /* text-muted */
+      --t5: rgba(255,255,255,0.30);  /* very muted */
+      --t6: rgba(255,255,255,0.10);  /* barely visible */
+
+      --sb-label-color: rgba(255,255,255,0.50);
+      --toc-border:     rgba(255,255,255,0.08);
+    }
+
+    /* ── LIGHT · 齊家厝 parchment (slightly toned down for readability) ── */
+    [data-theme="light"] {
+      --bg:      #FFFDF6;  /* 比 FFFBEE 再白一點，減少整頁米黃感 */
+      --bg-card: #ffffff;
+      --bg-hover:#F8F4E8;
+      --border:  #EBE4D1;
+      --border2: #DDD5BE;
+      --nav-bg:  rgba(255,253,246,0.55);
+      --th-bg:   #F5EFD6;
+
+      --t1: rgba(0,0,0,0.90);  /* text-primary */
+      --t2: rgba(0,0,0,0.70);  /* text-secondary */
+      --t3: rgba(0,0,0,0.60);  /* text-tertiary */
+      --t4: rgba(0,0,0,0.50);  /* text-muted */
+      --t5: rgba(0,0,0,0.30);  /* very muted */
+      --t6: rgba(0,0,0,0.10);  /* barely visible */
+
+      --sb-label-color: rgba(0,0,0,0.50);
+      --toc-border:     #E8DFC8;
+    }
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html { scroll-behavior: auto; }  /* 保持 auto，避免切頁時也平滑滾動；TOC 點擊由 JS 處理 smooth */
+    body {
+      font-family: system-ui, -apple-system, "Segoe UI",
+                   "PingFang TC", "Noto Sans TC", "Microsoft JhengHei", sans-serif;
+      background: var(--bg);
+      color: var(--t3);
+      font-size: 16px;
+      line-height: 1.65;
+      min-height: 100vh;
+    }
+
+    /* ══════════════════════════════════════════
+       TOP NAV — transparent + blur, inset to match content
+    ══════════════════════════════════════════ */
+    .nav-wrap {
+      position: fixed; top: 0; left: 0; right: 0; z-index: 300;
+      border-bottom: 1px solid var(--border);  /* full-width divider */
+    }
+    .nav-blur {
+      position: absolute; inset: 0;
+      background: var(--nav-bg);
+      backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
+    }
+    .topnav {
+      position: relative; z-index: 1;
+      height: var(--topnav-h);
+      max-width: var(--max-shell);
+      margin: 0 auto;
+      display: flex; align-items: center;
+      padding: 12px 48px;  /* 上下 12px 讓 navbar 不會太擠 */
+      gap: 0;
+    }
+    .nav-logo {
+      display: flex; align-items: center; gap: 9px;
+      font-size: 14px; font-weight: 600; color: var(--t1);
+      letter-spacing: -.01em; text-decoration: none; white-space: nowrap;
+      margin-right: 28px;
+    }
+    .nav-logo svg { width: 20px; height: 20px; flex-shrink: 0; }
+
+    /* System switcher tabs (住戶端 / 建商端) */
+    .sys-tabs {
+      display: flex; gap: 2px;
+      background: var(--bg-card); border: 1px solid var(--border2);
+      border-radius: 8px; padding: 3px;
+    }
+    .sys-tab {
+      padding: 6px 16px;
+      font-size: 13px; font-weight: 500;
+      border-radius: 6px; cursor: pointer;
+      border: none; background: transparent; color: var(--t4);
+      transition: background .25s var(--spring-soft), color .25s var(--spring-soft);
+      white-space: nowrap;
+    }
+    .sys-tab:hover { color: var(--t2); background: var(--bg-hover); }
+    .sys-tab.active { background: var(--bg-hover); color: var(--accent); }
+
+    /* Theme toggle */
+    .theme-btn {
+      margin-left: auto;
+      width: 32px; height: 32px; border-radius: 8px;
+      background: transparent; border: 1px solid var(--border2);
+      color: var(--t3); font-size: 15px;
+      display: flex; align-items: center; justify-content: center;
+      cursor: pointer; transition: background .25s var(--spring-soft), color .25s var(--spring-soft);
+      flex-shrink: 0;
+    }
+    .theme-btn:hover { background: var(--bg-hover); color: var(--t1); }
+
+    .nav-badge {
+      margin-left: 12px;
+      font-size: 12px; color: var(--t4);
+      letter-spacing: .04em; white-space: nowrap;
+    }
+    .nav-badge em { color: var(--accent); font-style: normal; }
+
+    /* ══════════════════════════════════════════
+       TABS BAR — secondary nav below topnav (like Claude Docs)
+    ══════════════════════════════════════════ */
+    /* Tabs bar — 頁面內 inline 元件，帶滑動底線動畫 */
+    .tabs-bar {
+      position: relative;
+      display: flex; align-items: stretch;
+      height: 44px;
+      gap: 0;
+      border-bottom: 1px solid var(--border);
+      margin-bottom: 32px;
+    }
+    /* 滑動底線指示器 */
+    .tabs-indicator {
+      position: absolute; bottom: -1px;
+      height: 2px; border-radius: 1px;
+      background: var(--accent);
+      transition: left .45s var(--spring), width .45s var(--spring);
+      pointer-events: none;
+    }
+    .tabs-link {
+      position: relative;
+      display: flex; align-items: center;
+      padding: 0 16px;
+      font-size: 14px; font-weight: 500;
+      color: var(--t4);
+      text-decoration: none; cursor: pointer;
+      transition: color .3s var(--spring-soft), background .3s var(--spring-soft);
+      white-space: nowrap;
+      border: none; background: transparent;
+      border-radius: 8px 8px 0 0;
+    }
+    .tabs-link:hover {
+      color: var(--t2);
+      background: var(--bg-hover);
+    }
+    .tabs-link.active {
+      color: var(--t1);
+    }
+
+    /* ══════════════════════════════════════════
+       LAYOUT — three columns: sb | content | toc
+    ══════════════════════════════════════════ */
+    .layout {
+      display: flex;
+      padding-top: var(--nav-h);
+      max-width: var(--max-shell);
+      margin: 0 auto;
+      padding-left: 48px;
+      padding-right: 48px;
+      min-height: 100vh;
+      position: relative;
+    }
+
+    /* ── Sidebar — 288px (18rem) matching Claude Docs ── */
+    .sidebar {
+      position: fixed;
+      top: var(--nav-h); bottom: 0;
+      left: 48px;
+      width: var(--sidebar-w);
+      background: var(--bg);
+      border-right: 1px solid var(--border);
+      overflow-y: auto;
+      padding: 16px 32px 48px 16px;
+      z-index: 100;
+    }
+    .sidebar::-webkit-scrollbar { width: 3px; }
+    .sidebar::-webkit-scrollbar-thumb { background: var(--border2); border-radius: 2px; }
+
+    /* 在超寬螢幕上對齊 sidebar 到 max-shell 內 */
+    @media (min-width: 1473px) {
+      .sidebar { left: calc((100vw - var(--max-shell)) / 2 + 48px); }
+      .layout { padding-left: 0; padding-right: 0; }
+    }
+
+    .sb-group { margin-bottom: 6px; }
+    .sb-label {
+      font-size: 14px; font-weight: 600; letter-spacing: 0;
+      text-transform: none; color: var(--t1);
+      padding: 20px 0 8px;
+      line-height: 24px;
+    }
+    .sb-link {
+      display: flex; align-items: center;
+      padding: 6px 12px 6px 16px;
+      margin-bottom: 2px;
+      font-size: 14px; color: var(--t4);
+      text-decoration: none; cursor: pointer;
+      transition: background .25s var(--spring-soft), color .25s var(--spring-soft);
+      position: relative; line-height: 24px;
+      border-radius: 12px;
+    }
+    .sb-link:hover  { background: var(--bg-hover); color: var(--t1); }
+    .sb-link.active {
+      background: var(--accent-dim);
+      color: var(--accent); font-weight: 400;
+    }
+    .sb-sub { padding-left: 20px; font-size: 13px; }
+
+    /* ── Content — 佈局比例 20:58:22 (sidebar:content:toc) ── */
+    .main {
+      margin-left: var(--sidebar-w);
+      flex: 1; display: flex; min-width: 0;
+      min-height: calc(100vh - var(--nav-h));
+    }
+    .content {
+      flex: 1; min-width: 0;
+      max-width: 720px;
+      padding: 40px 32px 100px;
+      margin: 0 auto;
+    }
+
+    /* ── TOC — 304px matching Claude Docs ── */
+    .toc {
+      position: sticky; top: calc(var(--nav-h) + 24px);
+      align-self: flex-start;
+      width: var(--toc-w); min-width: 200px;
+      padding: 0 0 0 32px; flex-shrink: 0;
+    }
+    .toc-head {
+      font-size: 14px; font-weight: 500; letter-spacing: 0;
+      text-transform: none; color: var(--t2); margin-bottom: 12px;
+    }
+    .toc-link {
+      display: block; padding: 4px 0 4px 12px;
+      font-size: 14px; color: var(--t4);
+      text-decoration: none;
+      border-left: 1px solid var(--toc-border);
+      transition: color .25s var(--spring-soft), border-color .25s var(--spring-soft); line-height: 1.7;
+    }
+    .toc-link:hover  { color: var(--t2); border-left-color: var(--t4); }
+    .toc-link.active { color: var(--accent); border-left-color: var(--accent); font-weight: 500; }
+    .toc-sub { padding-left: 20px; font-size: 13px; }
+
+    /* ══════════════════════════════════════════
+       MOBILE MENU BUTTON + DRAWER
+    ══════════════════════════════════════════ */
+    .menu-btn {
+      display: none;           /* 桌面版隱藏 */
+      width: 36px; height: 36px; border-radius: 8px;
+      background: transparent; border: 1px solid var(--border2);
+      color: var(--t2); font-size: 20px;
+      align-items: center; justify-content: center;
+      cursor: pointer; transition: background .25s var(--spring-soft);
+      flex-shrink: 0; margin-right: 12px;
+      line-height: 0.85;  /* 讓 icon 垂直置中，避免偏下 */
+      padding-bottom: 2px;
+    }
+    .menu-btn:hover { background: var(--bg-hover); }
+
+    /* ── APP SHELL（手機版整體推移用）── */
+    .app-shell {
+      position: relative;
+      background: var(--bg);
+    }
+
+    /* 遮罩層 */
+    .sidebar-overlay {
+      display: none;
+      position: fixed; inset: 0;
+      background: rgba(0,0,0,0.5);
+      z-index: 199;
+      opacity: 0; transition: opacity .4s var(--spring-soft);
+    }
+    .sidebar-overlay.show {
+      display: block; opacity: 1;
+    }
+
+    /* ══════════════════════════════════════════
+       RESPONSIVE
+    ══════════════════════════════════════════ */
+    @media (max-width: 1280px) {
+      .toc { display: none; }
+      .content { max-width: 100%; }
+    }
+    @media (max-width: 960px) {
+      /* 顯示 hamburger menu */
+      .menu-btn { display: flex; }
+
+      /* Sidebar 固定在畫面底層 */
+      .sidebar {
+        display: block !important;
+        position: fixed;
+        left: 0; top: 0; bottom: 0;
+        width: 300px;
+        padding-top: 24px;
+        z-index: 1;  /* 底層 */
+        border-right: none;
+        background: var(--bg);
+        overflow-y: auto;
+        -webkit-overflow-scrolling: touch;
+      }
+
+      /* App Shell 在 sidebar 之上，推開時露出 sidebar */
+      .app-shell {
+        z-index: 2;
+        transition: transform .5s var(--spring),
+                    border-radius .5s var(--spring),
+                    box-shadow .5s var(--spring);
+        min-height: 100vh;
+        box-shadow: none;
+        border-radius: 0;
+      }
+      .app-shell.menu-open {
+        transform: translateX(300px);
+        box-shadow: -8px 0 24px rgba(0,0,0,0.3);
+        border-radius: 48px 0 0 48px;  /* 左上、左下各 48px 大圓角 */
+        overflow: hidden;
+        height: 100vh;    /* 固定視窗高度，讓左下圓角可見 */
+        overflow-y: auto; /* 內容仍可滾動 */
+      }
+
+      /* 遮罩在 app-shell 內，跟著推移 */
+      .sidebar-overlay {
+        z-index: 400;
+      }
+
+      .main { margin-left: 0; }
+      .layout { padding-left: 24px; padding-right: 24px; }
+      .content { max-width: 100%; padding: 32px 0 72px; }
+      /* navbar 上下 padding 跟左右一致 */
+      :root { --topnav-h: 84px; --nav-h: 84px; }  /* 只有 topnav，tabs 在頁面內 */
+      .topnav { padding: 24px; height: var(--topnav-h); }
+
+      /* 手機版 tabs-bar（頁面內）可橫向滾動 */
+      .tabs-bar { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+      .tabs-bar::-webkit-scrollbar { display: none; }
+
+      /* 隱藏 patent badge 省空間 */
+      .nav-badge { display: none; }
+    }
+    @media (max-width: 600px) {
+      .sidebar { width: 280px; }
+      .app-shell.menu-open { transform: translateX(280px); }
+      .layout { padding-left: 16px; padding-right: 16px; }
+      .content { padding: 24px 0 60px; }
+      :root { --topnav-h: 68px; --nav-h: 68px; }
+      .topnav { padding: 16px; height: var(--topnav-h); }
+    }
+
+    /* ══════════════════════════════════════════
+       PAGE SYSTEM — show/hide with transition
+    ══════════════════════════════════════════ */
+    .page { display: none; opacity: 0; transform: translateY(8px); }
+    .page.visible {
+      display: block;
+      animation: pageIn .5s var(--spring) forwards;
+    }
+    @keyframes pageIn {
+      from { opacity: 0; transform: translateY(12px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    /* ══════════════════════════════════════════
+       TYPOGRAPHY — matched to Claude Code Docs
+       h1: 30px/36px w400 · h2: 24px/32px w400 mt48 mb16
+       body: 16px/26.4px · sidebar: 14px
+    ══════════════════════════════════════════ */
+    .eyebrow {
+      font-size: 12px; font-weight: 600; letter-spacing: .06em;
+      text-transform: uppercase; color: var(--accent); margin-bottom: 12px;
+    }
+
+    h1 {
+      font-size: 30px; font-weight: 400; line-height: 1.2;
+      color: var(--t1); letter-spacing: -0.025em; margin-bottom: 16px;
+    }
+    .lead {
+      font-size: 16px; color: var(--t3); line-height: 1.65;
+      margin-bottom: 32px; padding-bottom: 0;
+    }
+    h2 {
+      font-size: 24px; font-weight: 400; color: var(--t1);
+      margin: 48px 0 16px;
+      display: flex; align-items: center; gap: 10px;
+      letter-spacing: -.015em; line-height: 1.33;
+    }
+    h2::before {
+      content: ''; width: 3px; height: 22px; border-radius: 2px;
+      background: var(--accent); flex-shrink: 0;
+    }
+
+    h3 {
+      font-size: 18px; font-weight: 500; color: var(--t2);
+      margin: 32px 0 10px; letter-spacing: -.01em;
+    }
+    p { font-size: 16px; color: var(--t3); line-height: 1.65; margin-bottom: 16px; }
+    p strong { color: var(--t2); font-weight: 600; }
+
+    /* ══════════════════════════════════════════
+       COMPONENTS
+    ══════════════════════════════════════════ */
+
+    /* Callout — 16px rounded like Docs */
+    .callout {
+      background: var(--accent-dim);
+      border: 1px solid var(--accent-border);
+      border-radius: 16px;
+      padding: 16px 20px; margin: 0 0 24px;
+      font-size: 15px; color: var(--t3); line-height: 1.65;
+    }
+    .callout strong { color: var(--accent); }
+
+    /* Card grid */
+    .card-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(210px, 1fr));
+      gap: 12px; margin: 20px 0 36px;
+    }
+    .card {
+      background: var(--bg-card); border: 1px solid var(--border2);
+      border-radius: 16px; padding: 20px;
+      transition: border-color .25s var(--spring-soft);
+    }
+    .card:hover { border-color: var(--accent-border); }
+    .card-icon { font-size: 22px; margin-bottom: 12px; }
+    .card-title { font-size: 14px; font-weight: 600; color: var(--t1); margin-bottom: 8px; }
+    .card-desc { font-size: 14px; color: var(--t3); line-height: 1.65; }
+
+    /* Section divider */
+    .hr { border: none; border-top: 1px solid var(--border); margin: 48px 0; }
+
+    /* App header strip */
+    .app-strip {
+      display: flex; align-items: center; gap: 14px;
+      background: var(--bg-card); border: 1px solid var(--border2);
+      border-radius: 16px; padding: 16px 20px; margin-bottom: 32px;
+    }
+    .app-strip-icon {
+      width: 44px; height: 44px; border-radius: 12px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 22px; flex-shrink: 0;
+    }
+    .app-strip-icon.r { background: var(--green-dim);    border: 1px solid var(--green-border); }
+    .app-strip-icon.d { background: var(--accent-dim);   border: 1px solid var(--accent-border); }
+    .app-strip strong { display: block; font-size: 15px; font-weight: 600; color: var(--t1); margin-bottom: 2px; }
+    .app-strip span   { font-size: 13px; color: var(--t4); }
+
+    /* Concept section header */
+    .concept-header {
+      background: var(--bg-card); border: 1px solid var(--border2);
+      border-radius: 16px; padding: 20px 24px; margin: 4px 0 24px;
+    }
+    .concept-header-title {
+      font-size: 15px; font-weight: 600; color: var(--t1);
+      display: flex; align-items: center; gap: 10px; margin-bottom: 8px;
+    }
+    .concept-num {
+      width: 24px; height: 24px; border-radius: 50%;
+      display: inline-flex; align-items: center; justify-content: center;
+      background: var(--accent-dim); border: 1px solid var(--accent-border);
+      font-size: 11px; font-weight: 700; color: var(--accent); flex-shrink: 0;
+    }
+    .concept-header p { margin: 0; font-size: 14px; color: var(--t3); line-height: 1.65; }
+
+    /* Flow table */
+    .ftable-wrap { overflow-x: auto; margin: 12px 0 28px; border-radius: 12px; border: 1px solid var(--border2); }
+    .ftable { width: 100%; border-collapse: collapse; font-size: 14px; }
+    .ftable th {
+      background: var(--th-bg); color: var(--t4);
+      font-size: 11px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase;
+      padding: 10px 16px; text-align: left;
+      border-bottom: 1px solid var(--border2); white-space: nowrap;
+    }
+    .ftable td {
+      padding: 12px 16px;
+      border-bottom: 1px solid var(--border);
+      vertical-align: top; line-height: 1.65; color: var(--t3);
+    }
+    .ftable tr:last-child td { border-bottom: none; }
+    .ftable tr:hover td { background: var(--bg-hover); }
+    .fnum {
+      display: inline-flex; align-items: center; justify-content: center;
+      width: 22px; height: 22px; border-radius: 50%;
+      background: var(--bg-hover); border: 1px solid var(--border2);
+      font-size: 10px; font-weight: 700; color: var(--t4);
+    }
+    .fname { font-weight: 600; color: var(--t1); font-size: 14px; }
+    .fwhy  { font-size: 13px; color: var(--t3); line-height: 1.6; }
+
+    /* IA table */
+    .itable-wrap { overflow-x: auto; margin: 12px 0 28px; border-radius: 12px; border: 1px solid var(--border2); }
+    .itable { width: 100%; border-collapse: collapse; font-size: 14px; }
+    .itable th {
+      background: var(--th-bg); color: var(--t4);
+      font-size: 11px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase;
+      padding: 10px 16px; text-align: left; border-bottom: 1px solid var(--border2);
+    }
+    .itable td {
+      padding: 12px 16px; border-bottom: 1px solid var(--border);
+      vertical-align: top; line-height: 1.65;
+    }
+    .itable tr:last-child td { border-bottom: none; }
+    .itable tr:hover td { background: var(--bg-hover); }
+
+    .tag {
+      display: inline-block; border-radius: 6px; padding: 2px 8px;
+      font-size: 11px; font-weight: 600; letter-spacing: .02em; margin-right: 5px;
+    }
+    .tag-auth { background: var(--green-dim);      border:1px solid var(--green-border);    color:#CB3B1B; }
+    .tag-home { background: var(--accent-dim);     border:1px solid var(--accent-border);   color:var(--accent); }
+    .tag-flow { background: var(--accent-dim);     border:1px solid var(--accent-border);   color:var(--accent); }
+    .tag-ai   { background: var(--green-dim);      border:1px solid var(--green-border);    color:#CB3B1B; }
+    .tag-sys  { background: var(--bg-hover);       border:1px solid var(--border2);         color:var(--t4); }
+
+    .iname { font-weight: 600; color: var(--t1); }
+    .ilist { margin: 0; padding: 0; list-style: none; }
+    .ilist li { font-size: 14px; color: var(--t3); padding: 2px 0; }
+    .ilist li::before { content: '· '; color: var(--t4); }
+    .inote { font-size: 13px; color: var(--t3); line-height: 1.6; }
+
+    /* Persona cards */
+    .persona-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin: 20px 0 32px; }
+    .persona-card { background: var(--bg-card); border: 1px solid var(--border2); border-radius: 16px; padding: 20px; }
+    .persona-name { font-size: 14px; font-weight: 600; color: var(--t1); margin-bottom: 8px; }
+    .persona-desc { font-size: 14px; color: var(--t3); line-height: 1.65; }
+    .persona-pain { margin-top: 12px; padding-top: 12px; border-top: 1px solid var(--border); font-size: 13px; color: var(--t3); line-height: 1.6; }
+    .persona-pain strong { color: var(--accent); }
+
+    /* Principle cards */
+    .principle-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px,1fr)); gap: 12px; margin: 20px 0 32px; }
+    .principle-card { background: var(--bg-card); border: 1px solid var(--border2); border-radius: 16px; padding: 20px; }
+    .pc-icon { font-size: 22px; margin-bottom: 10px; }
+    .pc-title { font-size: 14px; font-weight: 600; color: var(--t1); margin-bottom: 6px; }
+    .pc-desc { font-size: 14px; color: var(--t3); line-height: 1.65; }
+
+    /* Bottom nav */
+    .page-nav { display: flex; gap: 12px; margin-top: 56px; padding-top: 28px; border-top: 1px solid var(--border); }
+    .pn { flex: 1; background: var(--bg-card); border: 1px solid var(--border2); border-radius: 16px; padding: 16px 20px; text-decoration: none; cursor: pointer; transition: border-color .25s var(--spring-soft); }
+    .pn:hover { border-color: var(--accent-border); }
+    .pn-label { font-size: 12px; color: var(--t4); margin-bottom: 4px; }
+    .pn-title { font-size: 15px; font-weight: 500; color: var(--t2); }
+    .pn.right { text-align: right; }
+  </style>
+</head>
+<body class="resident">
+
+<!-- ══ 手機版 Sidebar（獨立於主內容之外，在底層）══ -->
+<aside class="sidebar" id="sidebar">
+
+    <!-- resident sidebar -->
+    <div id="sb-resident">
+      <div class="sb-group">
+        <div class="sb-label">開始了解</div>
+        <a class="sb-link active" href="#r-overview"   onclick="return nav(event,'r-overview')">產品概要</a>
+        <a class="sb-link"        href="#r-design"     onclick="return nav(event,'r-design')">設計概念</a>
+      </div>
+      <div class="sb-group">
+        <div class="sb-label">登入前</div>
+        <a class="sb-link"     href="#r-landing"      onclick="return nav(event,'r-landing')">Landing Page</a>
+        <a class="sb-link"     href="#r-evaluate"    onclick="return nav(event,'r-evaluate')">免費評估精靈</a>
+      </div>
+      <div class="sb-group">
+        <div class="sb-label">入門流程</div>
+        <a class="sb-link"     href="#r-onboarding"   onclick="return nav(event,'r-onboarding')">Onboarding 引導頁</a>
+        <a class="sb-link"     href="#r-auth"         onclick="return nav(event,'r-auth')">註冊 / 登入</a>
+      </div>
+      <div class="sb-group">
+        <div class="sb-label">核心頁面</div>
+        <a class="sb-link"     href="#r-home"         onclick="return nav(event,'r-home')">首頁（案例展示牆）</a>
+        <a class="sb-link"     href="#r-case-detail"  onclick="return nav(event,'r-case-detail')">案例詳情</a>
+        <a class="sb-link"     href="#r-profile"      onclick="return nav(event,'r-profile')">個人檔案</a>
+      </div>
+      <div class="sb-group">
+        <div class="sb-label">媒合與申請</div>
+        <a class="sb-link"     href="#r-match"        onclick="return nav(event,'r-match')">媒合表單</a>
+        <a class="sb-link"     href="#r-success"      onclick="return nav(event,'r-success')">成功頁</a>
+      </div>
+      <div class="sb-group">
+        <div class="sb-label">開發計畫</div>
+        <a class="sb-link"     href="#demo-plan"      onclick="return nav(event,'demo-plan')">版本時程</a>
+      </div>
+      <div class="sb-group">
+        <div class="sb-label">品牌資產</div>
+        <a class="sb-link"     href="#r-tokens"       onclick="return nav(event,'r-tokens')">Design Tokens</a>
+      </div>
+    </div>
+
+    <!-- developer sidebar -->
+    <div id="sb-developer" style="display:none">
+      <div class="sb-group">
+        <div class="sb-label">開始了解</div>
+        <a class="sb-link active" href="#d-overview" onclick="return nav(event,'d-overview')">產品概要</a>
+        <a class="sb-link"        href="#d-design"   onclick="return nav(event,'d-design')">設計概念</a>
+      </div>
+      <div class="sb-group">
+        <div class="sb-label">核心頁面</div>
+        <a class="sb-link" href="#d-auth"    onclick="return nav(event,'d-auth')">註冊 / 登入</a>
+        <a class="sb-link" href="#d-home"    onclick="return nav(event,'d-home')">首頁</a>
+        <a class="sb-link" href="#d-profile" onclick="return nav(event,'d-profile')">個人檔案</a>
+      </div>
+      <div class="sb-group">
+        <div class="sb-label">開發計畫</div>
+        <a class="sb-link" href="#demo-plan"  onclick="return nav(event,'demo-plan')">版本時程</a>
+      </div>
+    </div>
+  </aside>
+
+<!-- ══ APP SHELL（手機版開選單時整體往右推）══ -->
+<div class="app-shell" id="app-shell">
+
+<!-- 手機版遮罩層 -->
+<div class="sidebar-overlay" id="sidebar-overlay" onclick="toggleMobileMenu()"></div>
+
+<!-- ══ TOP NAV ══════════════════════════════════════ -->
+<div class="nav-wrap">
+  <div class="nav-blur"></div>
+  <nav class="topnav">
+    <button class="menu-btn" id="menu-btn" onclick="toggleMobileMenu()" aria-label="選單">☰</button>
+    <a class="nav-logo" href="#">
+      <svg viewBox="0 0 20 20" fill="none" stroke="#C8A75D" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+        <polygon points="10,2 18,6.5 18,13.5 10,18 2,13.5 2,6.5"/>
+        <line x1="10" y1="2" x2="10" y2="18"/>
+        <line x1="2" y1="6.5" x2="18" y2="13.5"/>
+        <line x1="18" y1="6.5" x2="2" y2="13.5"/>
+      </svg>
+      U-SAFE Cloud
+    </a>
+
+    <div class="sys-tabs">
+      <button class="sys-tab resident active" onclick="switchSystem('resident')">住戶端</button>
+      <button class="sys-tab developer"       onclick="switchSystem('developer')">建商端</button>
+    </div>
+
+    <div class="nav-badge">Patent <em>114212560</em></div>
+
+    <button class="theme-btn" id="theme-btn" onclick="toggleTheme()" title="切換明暗主題">🌙</button>
+  </nav>
+</div>
+
+<!-- ══ LAYOUT ════════════════════════════════════════ -->
+<div class="layout">
+
+  <!-- ─ MAIN ─────────────────────────────────────── -->
+  <div class="main">
+    <article class="content" id="content-area">
+
+      <!-- ── 頁面內 Tabs Bar（會被 JS 移動到每個 page 的 .lead 後方）── -->
+      <div class="tabs-bar" id="tabs-bar">
+        <button class="tabs-link active" onclick="switchTab('design')"    data-tab="design">設計規格</button>
+        <button class="tabs-link"        onclick="switchTab('dev')"       data-tab="dev">開發實作</button>
+        <button class="tabs-link"        onclick="switchTab('iteration')" data-tab="iteration">迭代紀錄</button>
+        <button class="tabs-link"        onclick="switchTab('brand')"     data-tab="brand">品牌資產</button>
+        <button class="tabs-link"        onclick="switchTab('reference')" data-tab="reference">參考資料</button>
+        <div class="tabs-indicator" id="tabs-indicator"></div>
+      </div>
+
+      <!-- ═══════════════════════════════════════════
+           RESIDENT PAGES
+      ═══════════════════════════════════════════ -->
+
+      <!-- R1 · 產品概要 -->
+      <div class="page visible" id="r-overview">
+        <div class="eyebrow">住戶端 · 產品概要</div>
+        <h1>讓住戶真正看懂<br>自己家的都更</h1>
+        <p class="lead">
+          住戶端 APP 是整個 U-SAFE 平台的「住民入口」。
+          它不是一個工具集，而是一個陪著住戶走過都更全程的數位夥伴——
+          從第一次收到建商通知，到最後一次確認補償方案，
+          每個環節都讓住戶感覺自己有參與、有發言權、有保障。
+        </p>
+
+        <div class="app-strip">
+          <div class="app-strip-icon r">🏠</div>
+          <div>
+            <strong>住戶端 APP</strong>
+            <span>設計語言：溫暖、清晰、安心感</span>
+          </div>
+        </div>
+
+        <div class="callout">
+          <strong>為什麼需要這支 APP？</strong><br>
+          傳統都更流程中，住戶的資訊來源只有「等通知」。
+          文件看不懂、進度不透明、問題問了沒有回音——
+          住戶端 APP 的存在，就是要把這三件事都解決掉。
+        </div>
+
+        <h2>這支 APP 在做三件事</h2>
+
+        <div class="card-grid">
+          <div class="card">
+            <div class="card-icon">🧭</div>
+            <div class="card-title">告訴住戶現在在哪</div>
+            <div class="card-desc">都更進度時間軸，讓住戶不需要打電話問，打開 APP 就知道案件到哪個階段了。</div>
+          </div>
+          <div class="card">
+            <div class="card-icon">💬</div>
+            <div class="card-title">讓問題有地方問</div>
+            <div class="card-desc">類聊天室的回報介面，問了就有推播通知，住戶不會覺得自己的問題被丟進黑洞。</div>
+          </div>
+          <div class="card">
+            <div class="card-icon">🗳️</div>
+            <div class="card-title">讓表態變得簡單</div>
+            <div class="card-desc">線上投票、AI 文件摘要、電子簽署，把以前需要親自跑一趟的事變成幾次點擊。</div>
+          </div>
+        </div>
+
+        <h2>它長什麼樣子</h2>
+        <p>
+          整體視覺語言走溫暖深色系。主色調用柔和的綠色作為 accent，
+          代表「進展中」、「有在進行」的感覺，不是冷冰冰的法律文件感。
+          字體偏大、間距寬鬆，讓不常用手機的長輩也能輕鬆閱讀。
+        </p>
+        <p>
+          底部導覽列只有四個項目：首頁、進度、投票、設定。
+          任何功能最多三次點擊就能到達，不讓住戶迷失在複雜的選單裡。
+        </p>
+
+        <div class="page-nav">
+          <div class="pn right" onclick="goto('r-design')">
+            <div class="pn-label">下一頁 →</div>
+            <div class="pn-title">設計概念</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- R2 · 設計概念 -->
+      <div class="page" id="r-design">
+        <div class="eyebrow">住戶端 · 設計概念</div>
+        <h1>設計這支 APP<br>時我們在想什麼</h1>
+        <p class="lead">
+          這裡記錄的不是功能清單，而是在設計每一個畫面時背後的思考方式。
+          當遇到取捨的時候，這些原則就是判斷的依據。
+        </p>
+
+        <h2>使用者是誰</h2>
+        <div class="persona-grid">
+          <div class="persona-card">
+            <div class="persona-name">🏠 陳太太，65 歲</div>
+            <div class="persona-desc">住在案件內 30 年，每天用 LINE 和 YouTube，對都更又期待又擔心，最怕被蒙在鼓裡。</div>
+            <div class="persona-pain"><strong>她需要的是：</strong>一眼看懂、不需要解釋、出了問題找得到人。</div>
+          </div>
+          <div class="persona-card">
+            <div class="persona-name">🧑‍💼 小林，32 歲</div>
+            <div class="persona-desc">繼承了父親的房子，人在台北工作，對都更流程完全陌生，希望不要浪費太多時間在這件事上。</div>
+            <div class="persona-pain"><strong>他需要的是：</strong>高效、摘要、能遠端處理，不要每次都要親自回去。</div>
+          </div>
+        </div>
+
+        <h2>四個設計原則</h2>
+        <div class="principle-grid">
+          <div class="principle-card">
+            <div class="pc-icon">🎯</div>
+            <div class="pc-title">首頁只做一件事</div>
+            <div class="pc-desc">打開 APP 就看到「今天最重要的三件事」，不是一堆功能的集合，而是一個行動導向的儀表板。</div>
+          </div>
+          <div class="principle-card">
+            <div class="pc-icon">🪜</div>
+            <div class="pc-title">資訊有層次</div>
+            <div class="pc-desc">摘要在外層，細節在裡層。不想深入的人不需要看，想了解的人可以一直往裡點。</div>
+          </div>
+          <div class="principle-card">
+            <div class="pc-icon">📋</div>
+            <div class="pc-title">每個動作有回饋</div>
+            <div class="pc-desc">回報送出有推播、投票完成有確認、簽署完成有收據。讓住戶知道「我的動作有被記錄」。</div>
+          </div>
+          <div class="principle-card">
+            <div class="pc-icon">🤖</div>
+            <div class="pc-title">AI 幫忙讀懂複雜的東西</div>
+            <div class="pc-desc">法律文件有 AI 摘要，投票提案有重點整理，讓不是法律背景的住戶也能做出有依據的決定。</div>
+          </div>
+        </div>
+
+        <h2>情緒設計的考量</h2>
+        <p>
+          都更是一件讓人焦慮的事。住戶端的設計刻意避開「緊張」的視覺語言——
+          不用紅色警告、不用倒數計時嚇人、不把法律文件的冷硬感帶進來。
+          唯一的例外是投票截止倒數，因為那裡確實需要讓人知道「有時限」。
+        </p>
+        <p>
+          整個 APP 的互動設計原則是：<strong>給人掌控感，不是催促感。</strong>
+          住戶可以選擇什麼時候閱讀公告、什麼時候回答問題、什麼時候投票，
+          系統提醒，但不強迫。
+        </p>
+
+        <div class="page-nav">
+          <div class="pn" onclick="goto('r-overview')">
+            <div class="pn-label">← 上一頁</div>
+            <div class="pn-title">產品概要</div>
+          </div>
+          <div class="pn right" onclick="goto('r-auth')">
+            <div class="pn-label">下一頁 →</div>
+            <div class="pn-title">註冊 / 登入</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- R3 · 註冊 / 登入 -->
+      <div class="page" id="r-auth">
+        <div class="eyebrow">住戶端 · 核心概念</div>
+        <h1>註冊 / 登入</h1>
+        <p class="lead">
+          這是住戶與 U-SAFE 的第一次接觸。
+          設計目標只有一個：<strong>讓任何人都能在第一次就順利完成</strong>，
+          包括從來沒有用過「驗證碼」這個概念的長輩。
+        </p>
+
+        <div class="concept-header">
+          <div class="concept-header-title">
+            <span class="concept-num">!</span>
+            設計核心思路
+          </div>
+          <p>登入與註冊合二為一——輸入手機號碼，收到驗證碼，進來就是。
+          系統自動判斷是新用戶還是舊用戶，不需要住戶自己分辨「我應該按登入還是註冊」。</p>
+        </div>
+
+        <h2>流程設計</h2>
+
+        <div class="ftable-wrap">
+          <table class="ftable">
+            <thead>
+              <tr>
+                <th width="32">#</th>
+                <th width="140">這個畫面</th>
+                <th>住戶在做什麼</th>
+                <th width="220">為什麼這樣設計</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><span class="fnum">1</span></td>
+                <td><span class="fname">Splash 啟動畫面</span></td>
+                <td>看到品牌 Logo，APP 在背後判斷是否已登入</td>
+                <td class="fwhy">已登入的人直接進首頁，不用每次重新登入</td>
+              </tr>
+              <tr>
+                <td><span class="fnum">2</span></td>
+                <td><span class="fname">輸入手機號碼</span></td>
+                <td>填入手機號，選擇用 OTP 或 Google 帳號</td>
+                <td class="fwhy">兩種方式並存——OTP 給不用 Google 的長輩，Google 給習慣的年輕住戶</td>
+              </tr>
+              <tr>
+                <td><span class="fnum">3</span></td>
+                <td><span class="fname">輸入驗證碼</span></td>
+                <td>輸入 6 位數 OTP，60 秒有效，可重送</td>
+                <td class="fwhy">不需要記密碼，對長輩更友善；重送功能照顧收不到簡訊的情況</td>
+              </tr>
+              <tr>
+                <td><span class="fnum">4</span></td>
+                <td><span class="fname">填基本資料</span></td>
+                <td>新用戶填姓名、地址、屋齡、坪數（舊用戶直接跳過）</td>
+                <td class="fwhy">註冊時就收核心房屋資料，系統可以直接估價推薦建商，屋主進首頁就看到個人化內容</td>
+              </tr>
+              <tr>
+                <td><span class="fnum">5</span></td>
+                <td><span class="fname">輸入邀請碼</span></td>
+                <td>輸入建商提供的案件邀請碼，或掃描 QR Code</td>
+                <td class="fwhy">邀請碼確保只有真正的利害關係人才能進入案件資訊</td>
+              </tr>
+              <tr>
+                <td><span class="fnum">6</span></td>
+                <td><span class="fname">進入首頁</span></td>
+                <td>看到屬於自己的都更案件資訊</td>
+                <td class="fwhy">第一次進來就看到「有內容」，讓住戶確認這個 APP 是對的</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <h2>頁面元件</h2>
+        <div class="itable-wrap">
+          <table class="itable">
+            <thead>
+              <tr>
+                <th width="170">頁面</th>
+                <th>裝了什麼</th>
+                <th width="210">設計想法</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><span class="tag tag-auth">Auth</span><span class="iname">啟動畫面</span></td>
+                <td><ul class="ilist"><li>品牌 Logo 動畫（1.5 秒）</li><li>自動導向判斷</li></ul></td>
+                <td class="inote">給第一次開的人一個品牌印象；給系統時間判斷登入狀態</td>
+              </tr>
+              <tr>
+                <td><span class="tag tag-auth">Auth</span><span class="iname">登入 / 註冊</span></td>
+                <td><ul class="ilist"><li>手機號碼輸入欄</li><li>OTP 驗證碼輸入（含 60 秒倒數）</li><li>Google 登入按鈕</li><li>服務條款連結</li></ul></td>
+                <td class="inote">合一設計，首次使用自動建立帳號，按一個按鈕就知道要幹嘛</td>
+              </tr>
+              <tr>
+                <td><span class="tag tag-auth">Auth</span><span class="iname">資料建立</span></td>
+                <td><ul class="ilist"><li>姓名輸入</li><li>案件邀請碼 / QR Code 掃描</li><li>頭像上傳（選填）</li></ul></td>
+                <td class="inote">只收必要的；QR Code 讓長輩不用手動輸入一長串邀請碼</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <div class="page-nav">
+          <div class="pn" onclick="goto('r-design')">
+            <div class="pn-label">← 上一頁</div>
+            <div class="pn-title">設計概念</div>
+          </div>
+          <div class="pn right" onclick="goto('r-home')">
+            <div class="pn-label">下一頁 →</div>
+            <div class="pn-title">首頁</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- R4 · 首頁 -->
+      <div class="page" id="r-home">
+        <div class="eyebrow">住戶端 · 核心概念</div>
+        <h1>首頁<br><span style="font-size:18px; color:var(--t2);">案例展示牆</span></h1>
+        <p class="lead">
+          首頁是屋主的第一印象。不是功能選單，而是像 Netflix 一樣的<strong>成功案例展示牆</strong>——
+          用氣派的完工照片和真實數字激發信任感，讓屋主看了心動、產生信任感。
+        </p>
+
+        <div class="concept-header">
+          <div class="concept-header-title">
+            <span class="concept-num">!</span>
+            設計核心思路
+          </div>
+          <p>首頁放三樣東西：Hero 大圖輪播（成功都更案例）、橫向滾動建商卡片列、CTA 媒合入口。
+          兩條路並行——看案例被吸引進入，或直接點「開始媒合」。</p>
+        </div>
+
+        <h2>首頁內容組成</h2>
+
+        <div class="ftable-wrap">
+          <table class="ftable">
+            <thead>
+              <tr>
+                <th width="32">#</th>
+                <th width="160">區域</th>
+                <th>內容</th>
+                <th width="200">設計理由</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><span class="fnum">1</span></td>
+                <td><span class="fname">Hero 大圖輪播</span></td>
+                <td>成功都更案例的完工照片，3-5 張可左右滑動，每張 2 秒自動播放</td>
+                <td class="fwhy">圖片是第一視覺衝擊，要氣派、要漂亮、要讓人有嚮往感</td>
+              </tr>
+              <tr>
+                <td><span class="fnum">2</span></td>
+                <td><span class="fname">快捷功能列</span></td>
+                <td>「開始媒合」、「查看全部案例」、「都更小學堂」三個大按鈕</td>
+                <td class="fwhy">讓沒被案例吸引的屋主也有明確的下一步行動</td>
+              </tr>
+              <tr>
+                <td><span class="fnum">3</span></td>
+                <td><span class="fname">成功案例橫向滾動列</span></td>
+                <td>5-8 個案例卡片，可左右滑動，每張卡片顯示案名、地區、原→完工前後對比數字</td>
+                <td class="fwhy">橫向列表比垂直更容易 scan，「看一遍都有」的視覺感</td>
+              </tr>
+              <tr>
+                <td><span class="fnum">4</span></td>
+                <td><span class="fname">CTA 橫幅</span></td>
+                <td>「您也想讓房子煥然一新嗎？」+ 「立即開始媒合」磚紅色大按鈕</td>
+                <td class="fwhy">在每個案例卡下方都有點擊機會，降低轉換路徑</td>
+              </tr>
+              <tr>
+                <td><span class="fnum">5</span></td>
+                <td><span class="fname">都更小學堂</span></td>
+                <td>3-5 篇都更教育文章，用簡單圖示和大字體解釋概念</td>
+                <td class="fwhy">提升屋主的信心和理解度，不讓他們覺得都更是黑盒子</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <h2>頁面元件</h2>
+        <div class="itable-wrap">
+          <table class="itable">
+            <thead>
+              <tr>
+                <th width="170">區域</th>
+                <th>裝了什麼</th>
+                <th width="210">設計想法</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><span class="tag tag-home">頂部</span><span class="iname">Hero 輪播</span></td>
+                <td><ul class="ilist"><li>全幅高清完工照</li><li>左右箭頭或圓點分頁</li><li>自動播放 + 手動滑動</li><li>案名 + 關鍵數字疊加在圖上</li></ul></td>
+                <td class="inote">圖片要占至少 40% 螢幕高度，設計參考 Netflix</td>
+              </tr>
+              <tr>
+                <td><span class="tag tag-home">快捷列</span><span class="iname">三個大按鈕</span></td>
+                <td><ul class="ilist"><li>「開始媒合」磚紅色（Primary）</li><li>「查看全部案例」白邊（Secondary）</li><li>「都更小學堂」藍色（Tertiary）</li></ul></td>
+                <td class="inote">按鈕要大、要清楚，避免屋主不知道下一步</td>
+              </tr>
+              <tr>
+                <td><span class="tag tag-flow">案例卡</span><span class="iname">橫向滾動列</span></td>
+                <td><ul class="ilist"><li>完工外觀小圖（縮圖）</li><li>案名、地區、原屋齡 / 完工樓層</li><li>「原本 X 萬 → 都更後 Y 億」數字卡（高亮）</li><li>「查看詳情」按鈕</li></ul></td>
+                <td class="inote">數字是最吸引眼球的，要放在顯眼位置且用大字體</td>
+              </tr>
+              <tr>
+                <td><span class="tag tag-home">教育</span><span class="iname">都更小學堂</span></td>
+                <td><ul class="ilist"><li>Icon + 標題 + 簡短說明（2-3 句）</li><li>「了解更多」連結</li><li>3-5 篇為一組，可左右滑動或分頁</li></ul></td>
+                <td class="inote">教育內容要點狀呈現，不要長文，降低閱讀門檻</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <div class="page-nav">
+          <div class="pn" onclick="goto('r-auth')">
+            <div class="pn-label">← 上一頁</div>
+            <div class="pn-title">註冊 / 登入</div>
+          </div>
+          <div class="pn right" onclick="goto('r-case-detail')">
+            <div class="pn-label">下一頁 →</div>
+            <div class="pn-title">案例詳情</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- R5 · 個人檔案 -->
+      <div class="page" id="r-profile">
+        <div class="eyebrow">住戶端 · 核心概念</div>
+        <h1>個人檔案</h1>
+        <p class="lead">
+          個人檔案不是一個常用的頁面，但它是住戶「感覺有掌控感」的重要來源。
+          知道自己的資料存在哪、可以修改什麼、連結了哪些案件——
+          這些都讓住戶對這個平台多一分信任。
+        </p>
+
+        <h2>頁面元件</h2>
+        <div class="itable-wrap">
+          <table class="itable">
+            <thead>
+              <tr>
+                <th width="170">頁面</th>
+                <th>裝了什麼</th>
+                <th width="210">設計想法</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><span class="tag tag-sys">設定</span><span class="iname">個人資料</span></td>
+                <td><ul class="ilist"><li>姓名、頭像</li><li>手機號碼（不可修改，僅顯示）</li><li>案件綁定列表</li></ul></td>
+                <td class="inote">手機號是身份的根基，不允許修改，避免帳號被轉移</td>
+              </tr>
+              <tr>
+                <td><span class="tag tag-sys">設定</span><span class="iname">通知設定</span></td>
+                <td><ul class="ilist"><li>新公告推播開關</li><li>回覆通知開關</li><li>投票截止提醒</li><li>靜音時段設定</li></ul></td>
+                <td class="inote">讓住戶控制打擾頻率，避免推播過多導致直接關掉所有通知</td>
+              </tr>
+              <tr>
+                <td><span class="tag tag-sys">設定</span><span class="iname">案件列表</span></td>
+                <td><ul class="ilist"><li>所有連結的都更案件</li><li>各案件目前階段</li><li>新增案件（再次綁定邀請碼）</li></ul></td>
+                <td class="inote">住戶可能持有多筆不同的不動產，支援同時追蹤多個案件</td>
+              </tr>
+              <tr>
+                <td><span class="tag tag-sys">設定</span><span class="iname">我的文件</span></td>
+                <td><ul class="ilist"><li>已下載的案件文件</li><li>我的投票記錄</li><li>我的回報記錄</li></ul></td>
+                <td class="inote">一個地方找到所有與自己相關的記錄，方便住戶日後查閱</td>
+              </tr>
+              <tr>
+                <td><span class="tag tag-sys">設定</span><span class="iname">帳號設定</span></td>
+                <td><ul class="ilist"><li>隱私政策 / 服務條款</li><li>刪除帳號</li><li>登出</li></ul></td>
+                <td class="inote">刪除帳號放在最底部，不顯眼但可以找到，尊重住戶的退出意願</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <div class="page-nav">
+          <div class="pn" onclick="goto('r-success')">
+            <div class="pn-label">← 上一頁</div>
+            <div class="pn-title">成功頁</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- R-OB · Onboarding 介紹頁 -->
+      <div class="page" id="r-onboarding">
+        <div class="eyebrow">住戶端 · 核心概念</div>
+        <h1>Onboarding 介紹頁</h1>
+        <p class="lead">
+          在登入之前，用 4 頁滑動式介紹讓長輩放下戒心。
+          這裡不是功能介紹，而是<strong>建立第一印象</strong>——
+          讓屋主知道齊家厝是什麼、為什麼可以信任、都更沒有想像中可怕。
+        </p>
+
+        <div class="concept-header">
+          <div class="concept-header-title">
+            <span class="concept-num">!</span>
+            設計核心思路
+          </div>
+          <p>大字體（標題 28px+）、溫暖語氣（用「您」）、可跳過但鼓勵看完。每一頁都用一個關鍵數字或一句話打消一個顧慮。</p>
+        </div>
+
+        <h2>四頁內容規劃</h2>
+        <div class="ftable-wrap">
+          <table class="ftable">
+            <thead><tr><th width="32">#</th><th width="160">頁面主題</th><th>內容</th><th width="220">設計理由</th></tr></thead>
+            <tbody>
+              <tr>
+                <td><span class="fnum">1</span></td>
+                <td><span class="fname">齊家厝是什麼</span></td>
+                <td>台灣第一個以城市整合為核心的都更 AI 雲端平台。一句話講清楚。配城市天際線插圖</td>
+                <td class="fwhy">第一印象最重要——先回答「這是什麼」，不談功能</td>
+              </tr>
+              <tr>
+                <td><span class="fnum">2</span></td>
+                <td><span class="fname">您的房子，值得更好</span></td>
+                <td>雙北 70% 住宅屋齡逾 30 年（150 萬戶）。點出問題但不嚇人，用數據說話</td>
+                <td class="fwhy">引用業主 PPT 的真實數據，讓屋主意識到問題但感覺有解方</td>
+              </tr>
+              <tr>
+                <td><span class="fnum">3</span></td>
+                <td><span class="fname">全程保障，絕不吃虧</span></td>
+                <td>專業團隊（建築師、結構技師、估價師、律師）全程把關，資訊透明</td>
+                <td class="fwhy">直接搬出團隊陣容打消「會不會被騙」的顧慮</td>
+              </tr>
+              <tr>
+                <td><span class="fnum">4</span></td>
+                <td><span class="fname">三步開始，手機搞定</span></td>
+                <td>① 填房屋資料 ② 看建商方案 ③ 選擇心儀建商。強調簡單、不用出門</td>
+                <td class="fwhy">最後一頁要讓人覺得「好簡單，我試試看」然後按下開始</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <h2>頁面元件</h2>
+        <div class="itable-wrap">
+          <table class="itable">
+            <thead><tr><th width="170">區域</th><th>裝了什麼</th><th width="210">設計想法</th></tr></thead>
+            <tbody>
+              <tr>
+                <td><span class="tag tag-sys">導覽</span><span class="iname">跳過按鈕</span></td>
+                <td><ul class="ilist"><li>右上角「跳過」文字按鈕</li></ul></td>
+                <td class="inote">不強迫看完，尊重用戶選擇</td>
+              </tr>
+              <tr>
+                <td><span class="tag tag-home">內容</span><span class="iname">Icon + 文字</span></td>
+                <td><ul class="ilist"><li>大型圖示（80px）</li><li>小標 + 大標題 + 說明文字</li><li>亮點數據標籤</li></ul></td>
+                <td class="inote">視覺層次：圖示 → 標題 → 說明 → 數據，每層都能獨立傳達訊息</td>
+              </tr>
+              <tr>
+                <td><span class="tag tag-sys">底部</span><span class="iname">頁面指示器 + CTA</span></td>
+                <td><ul class="ilist"><li>圓點指示器（4 點）</li><li>「繼續」/「開始使用」按鈕</li></ul></td>
+                <td class="inote">最後一頁按鈕變色（磚紅）+ 文案變為「開始使用齊家厝」，暗示進入正式流程</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <div class="page-nav">
+          <div class="pn right" onclick="goto('r-auth')">
+            <div class="pn-label">下一頁 →</div>
+            <div class="pn-title">註冊 / 登入</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- R-CD · 案例詳情 -->
+      <div class="page" id="r-case-detail">
+        <div class="eyebrow">住戶端 · 核心概念</div>
+        <h1>案例詳情</h1>
+        <p class="lead">
+          當屋主在首頁看到某個成功案例被吸引，點進來後看到的頁面。
+          這一頁的目標是<strong>讓屋主心動</strong>——
+          「原來都更可以這樣！我的房子是不是也可以？」
+        </p>
+
+        <div class="concept-header">
+          <div class="concept-header-title">
+            <span class="concept-num">!</span>
+            設計核心思路
+          </div>
+          <p>用氣派的完工照片和翻倍的數字建立信任感。圖片佔比要大（至少 40% 螢幕高度），數字要有衝擊力（Before → After 對比）。底部 CTA 是整個流程的關鍵轉化點。</p>
+        </div>
+
+        <h2>內容資料來源</h2>
+        <div class="callout">
+          <strong>信義敦化案（真實案例）</strong><br>
+          來源：業主 PPT（JULES_251130.pdf）。三棟四層老公寓，危險等級 65%，原本價值僅 3,000 萬。經全案管理團隊整合，6 個月內百分之百簽約。完工後變為地上 12 層、地下 3 層豪華大樓，從老屋變身為億元級資產。建商：元捷建設。
+        </div>
+
+        <h2>頁面元件</h2>
+        <div class="itable-wrap">
+          <table class="itable">
+            <thead><tr><th width="170">區域</th><th>裝了什麼</th><th width="210">設計想法</th></tr></thead>
+            <tbody>
+              <tr>
+                <td><span class="tag tag-home">頂部</span><span class="iname">大圖輪播</span></td>
+                <td><ul class="ilist"><li>完工外觀照（全幅）</li><li>室內設計照</li><li>Before / After 對比照</li><li>3-5 張，可左右滑動</li></ul></td>
+                <td class="inote">圖片是第一視覺，要氣派、要漂亮、要讓人有嚮往感</td>
+              </tr>
+              <tr>
+                <td><span class="tag tag-home">資訊</span><span class="iname">案例基本資訊</span></td>
+                <td><ul class="ilist"><li>案名、地區、原始屋齡、原始樓層</li><li>完工後樓層、完工年份</li><li>「原本 3,000 萬 → 都更後翻倍成億元級」數字卡</li></ul></td>
+                <td class="inote">數字要有衝擊力，用大字體 + 高亮顏色突出</td>
+              </tr>
+              <tr>
+                <td><span class="tag tag-flow">故事</span><span class="iname">價值故事</span></td>
+                <td><ul class="ilist"><li>案例文字描述（起點 → 轉折 → 成果）</li><li>「安全 × 資產 × 信任 三重價值一次到位」標語</li></ul></td>
+                <td class="inote">故事比數據更能打動人心，用信義敦化案的真實文案</td>
+              </tr>
+              <tr>
+                <td><span class="tag tag-flow">建商</span><span class="iname">建商資訊卡</span></td>
+                <td><ul class="ilist"><li>公司名稱、評分、完成案例數、專長</li><li>公司簡介、服務地區</li><li>2-3 則住戶好評（Demo 用模擬資料）</li></ul></td>
+                <td class="inote">讓屋主對建商有基本認識，評分和好評增加信任感</td>
+              </tr>
+              <tr>
+                <td><span class="tag tag-auth">底部</span><span class="iname">CTA 按鈕</span></td>
+                <td><ul class="ilist"><li>「選擇此建商，開始我的都更」大按鈕（磚紅色）</li><li>「我也想都更」次要按鈕（先填資料再選建商）</li></ul></td>
+                <td class="inote">這是整個流程的關鍵轉化點，按鈕要大、顏色要突出</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <div class="page-nav">
+          <div class="pn" onclick="goto('r-home')">
+            <div class="pn-label">← 上一頁</div>
+            <div class="pn-title">首頁</div>
+          </div>
+          <div class="pn right" onclick="goto('r-match')">
+            <div class="pn-label">下一頁 →</div>
+            <div class="pn-title">媒合表單</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- R-MF · 媒合表單 -->
+      <div class="page" id="r-match">
+        <div class="eyebrow">住戶端 · 核心概念</div>
+        <h1>媒合表單</h1>
+        <p class="lead">
+          屋主決定申請媒合後的填寫流程。
+          因為「地址 + 屋齡 + 坪數」在註冊時已經收過了，
+          這裡只需要補充<strong>產權、意願和文件</strong>三步就能完成。
+        </p>
+
+        <div class="concept-header">
+          <div class="concept-header-title">
+            <span class="concept-num">!</span>
+            設計核心思路
+          </div>
+          <p>只有 3 步驟。每步都有「為什麼需要這些資料」的說明區。「不確定」永遠是一個選項，不讓用戶卡住。最後一步（文件上傳）明確標示「選填」，降低壓力。</p>
+        </div>
+
+        <h2>三步驟流程</h2>
+        <div class="ftable-wrap">
+          <table class="ftable">
+            <thead><tr><th width="32">#</th><th width="160">步驟</th><th>填寫內容</th><th width="220">為什麼需要</th></tr></thead>
+            <tbody>
+              <tr>
+                <td><span class="fnum">1</span></td>
+                <td><span class="fname">產權狀態</span></td>
+                <td>完整持有 / 共同持有 / 繼承取得 / 不確定。若共有則問人數和持分比例</td>
+                <td class="fwhy">產權決定了屋主在都更中的權益分配比例，是法律基礎</td>
+              </tr>
+              <tr>
+                <td><span class="fnum">2</span></td>
+                <td><span class="fname">都更意願與期望</span></td>
+                <td>意願程度（非常願意 / 有興趣 / 還在考慮 / 代家人詢問）、期望時間、預算範圍</td>
+                <td class="fwhy">幫助建商準備最符合期望的方案，不同意願會影響推薦策略</td>
+              </tr>
+              <tr>
+                <td><span class="fnum">3</span></td>
+                <td><span class="fname">文件上傳（選填）</span></td>
+                <td>建物謄本、土地謄本、權狀影本、房屋現況照片。支援 PDF、JPG、PNG</td>
+                <td class="fwhy">加速審核流程、讓 AI 估價更精準。但明確標示「選填」，之後補也 OK</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <h2>頁面元件</h2>
+        <div class="itable-wrap">
+          <table class="itable">
+            <thead><tr><th width="170">區域</th><th>裝了什麼</th><th width="210">設計想法</th></tr></thead>
+            <tbody>
+              <tr>
+                <td><span class="tag tag-sys">頂部</span><span class="iname">進度列</span></td>
+                <td><ul class="ilist"><li>步驟數字（1/3, 2/3, 3/3）</li><li>進度條（顏色隨步驟變化）</li><li>返回按鈕</li></ul></td>
+                <td class="inote">讓用戶隨時知道自己在哪、還剩幾步</td>
+              </tr>
+              <tr>
+                <td><span class="tag tag-home">內容</span><span class="iname">表單區域</span></td>
+                <td><ul class="ilist"><li>步驟 icon + 標題 + 小標</li><li>「為什麼需要這些資料」摺疊說明（左側色條）</li><li>選擇按鈕組 / 輸入欄位</li><li>Info 提示框（灰底，如「不確定也沒關係」）</li></ul></td>
+                <td class="inote">選擇按鈕比下拉選單更直覺；摺疊說明不強迫閱讀但隨時可看</td>
+              </tr>
+              <tr>
+                <td><span class="tag tag-auth">底部</span><span class="iname">CTA</span></td>
+                <td><ul class="ilist"><li>「下一步」/「提交申請」按鈕</li><li>最後一步按鈕變磚紅色</li><li>「提交後 1-3 天審核」提示文字</li></ul></td>
+                <td class="inote">按鈕在條件未滿足時變灰色（disabled），滿足後自動亮起</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <div class="page-nav">
+          <div class="pn" onclick="goto('r-case-detail')">
+            <div class="pn-label">← 上一頁</div>
+            <div class="pn-title">案例詳情</div>
+          </div>
+          <div class="pn right" onclick="goto('r-success')">
+            <div class="pn-label">下一頁 →</div>
+            <div class="pn-title">成功頁</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- R-SC · 成功頁 -->
+      <div class="page" id="r-success">
+        <div class="eyebrow">住戶端 · 核心概念</div>
+        <h1>送出成功</h1>
+        <p class="lead">
+          申請送出後的確認頁面。目標是<strong>讓屋主安心</strong>，
+          知道接下來會發生什麼、什麼時候會收到回覆。
+        </p>
+
+        <h2>頁面元件</h2>
+        <div class="itable-wrap">
+          <table class="itable">
+            <thead><tr><th width="170">區域</th><th>裝了什麼</th><th width="210">設計想法</th></tr></thead>
+            <tbody>
+              <tr>
+                <td><span class="tag tag-home">頂部</span><span class="iname">成功動畫</span></td>
+                <td><ul class="ilist"><li>大型勾選圖示（Teal 色，帶浮動動畫）</li><li>「申請已送出！」標題</li><li>簡短感謝文案</li></ul></td>
+                <td class="inote">正向回饋，讓用戶確認「我的操作有被記錄」</td>
+              </tr>
+              <tr>
+                <td><span class="tag tag-flow">流程</span><span class="iname">接下來的流程</span></td>
+                <td><ul class="ilist"><li>① 審核資料（1-3 天）</li><li>② AI 生成估價報告（審核後即時）</li><li>③ 推薦適合建商（自動匹配）</li><li>④ 建商聯繫諮詢（7 天內）</li></ul></td>
+                <td class="inote">卡片式列表，每步有編號 + 時間預估，消除「接下來呢」的不確定感</td>
+              </tr>
+              <tr>
+                <td><span class="tag tag-auth">底部</span><span class="iname">CTA</span></td>
+                <td><ul class="ilist"><li>「回到首頁」按鈕</li><li>「邀請鄰居一起加入」分享提示</li></ul></td>
+                <td class="inote">分享鄰居功能有助於社區整合，都更需要多數同意才能成案</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <div class="page-nav">
+          <div class="pn" onclick="goto('r-match')">
+            <div class="pn-label">← 上一頁</div>
+            <div class="pn-title">媒合表單</div>
+          </div>
+          <div class="pn right" onclick="goto('r-profile')">
+            <div class="pn-label">下一頁 →</div>
+            <div class="pn-title">個人檔案</div>
+          </div>
+        </div>
+      </div>
+
+
+      <!-- ═══════════════════════════════════════════
+           DEVELOPER PAGES
+      ═══════════════════════════════════════════ -->
+
+      <!-- D1 · 產品概要 -->
+      <div class="page" id="d-overview">
+        <div class="eyebrow">建商端 · 產品概要</div>
+        <h1>讓建商對每個案件<br>都有全局視野</h1>
+        <p class="lead">
+          建商端 APP 是都更專案團隊的「指揮中心」。
+          它幫助業務、專案經理、法務在同一個平台上協作，
+          讓過去散落在 Excel、LINE 群組、紙本文件裡的資訊
+          全部集中管理、即時可查。
+        </p>
+
+        <div class="app-strip">
+          <div class="app-strip-icon d">🏗️</div>
+          <div>
+            <strong>建商端 APP</strong>
+            <span>設計語言：專業、資訊密集、有掌控感</span>
+          </div>
+        </div>
+
+        <div class="callout">
+          <strong>為什麼需要這支 APP？</strong><br>
+          一個業務可能同時跟進 3 個案件、80 多位地主。
+          建商端的目標是讓他在最短的時間內判斷「今天最應該把時間花在哪裡」，
+          然後一鍵採取行動。
+        </div>
+
+        <h2>這支 APP 在做三件事</h2>
+        <div class="card-grid">
+          <div class="card">
+            <div class="card-icon">📊</div>
+            <div class="card-title">跨案件全局視野</div>
+            <div class="card-desc">所有案件的同意率、進度、待辦一頁看清楚，不需要逐一進入每個案件才能掌握全局。</div>
+          </div>
+          <div class="card">
+            <div class="card-icon">🤝</div>
+            <div class="card-title">地主關係管理</div>
+            <div class="card-desc">每位地主都有獨立的頁面記錄協商歷史，像 CRM 一樣管理，業務換人也不會斷掉。</div>
+          </div>
+          <div class="card">
+            <div class="card-icon">🧠</div>
+            <div class="card-title">AI 輔助決策</div>
+            <div class="card-desc">地塊分析、補償試算、文件摘要，AI 處理所有需要專業判斷的繁瑣工作。</div>
+          </div>
+        </div>
+
+        <div class="page-nav">
+          <div class="pn right" onclick="goto('d-design')">
+            <div class="pn-label">下一頁 →</div>
+            <div class="pn-title">設計概念</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- D2 · 設計概念 -->
+      <div class="page" id="d-design">
+        <div class="eyebrow">建商端 · 設計概念</div>
+        <h1>為專業用戶設計<br>高密度的工作環境</h1>
+        <p class="lead">
+          建商端的設計語言和住戶端截然不同。
+          使用者是每天花幾個小時在上面的業務和專案管理人員，
+          他們不需要「被引導」，他們需要「快速找到資訊、快速採取行動」。
+        </p>
+
+        <h2>設計參考對象</h2>
+        <p>建商端的 UI 設計語言更接近 <strong>Linear</strong>（專案管理）和 <strong>Notion</strong>（資訊組織）的交集——資料密度高、操作效率優先、但保持視覺的乾淨感。</p>
+
+        <div class="principle-grid">
+          <div class="principle-card">
+            <div class="pc-icon">⚡</div>
+            <div class="pc-title">效率優先</div>
+            <div class="pc-desc">核心操作都在三次點擊以內完成。常用功能放在顯眼的位置，不需要深入菜單。</div>
+          </div>
+          <div class="principle-card">
+            <div class="pc-icon">🗂️</div>
+            <div class="pc-title">資訊有結構</div>
+            <div class="pc-desc">地主按同意狀態分類、案件按風險程度排序，讓業務永遠知道「今天最重要的是哪個」。</div>
+          </div>
+          <div class="principle-card">
+            <div class="pc-icon">🔒</div>
+            <div class="pc-title">權限有邊界</div>
+            <div class="pc-desc">不同角色看到的資訊不同。業務看不到財務細節，法務看不到業務策略備註。</div>
+          </div>
+          <div class="principle-card">
+            <div class="pc-icon">📈</div>
+            <div class="pc-title">數字說話</div>
+            <div class="pc-desc">同意率、回應率、投票參與率——所有重要指標都數字化，讓決策有依據。</div>
+          </div>
+        </div>
+
+        <div class="page-nav">
+          <div class="pn" onclick="goto('d-overview')">
+            <div class="pn-label">← 上一頁</div>
+            <div class="pn-title">產品概要</div>
+          </div>
+          <div class="pn right" onclick="goto('d-auth')">
+            <div class="pn-label">下一頁 →</div>
+            <div class="pn-title">註冊 / 登入</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- D3 · 註冊 / 登入 -->
+      <div class="page" id="d-auth">
+        <div class="eyebrow">建商端 · 核心概念</div>
+        <h1>註冊 / 登入</h1>
+        <p class="lead">
+          建商端的登入機制和住戶端不同，走的是企業 IT 的邏輯——
+          帳號由公司管理員統一建立，員工用 Email + 密碼登入，
+          支援 SSO 整合，符合企業資安要求。
+        </p>
+
+        <div class="concept-header">
+          <div class="concept-header-title">
+            <span class="concept-num">!</span>
+            設計核心思路
+          </div>
+          <p>建商端帳號不開放自由註冊，由企業管理員在後台統一建立並指派角色。
+          這樣才能確保敏感的案件資訊只有授權人員才能存取。</p>
+        </div>
+
+        <h2>頁面元件</h2>
+        <div class="itable-wrap">
+          <table class="itable">
+            <thead>
+              <tr><th width="170">頁面</th><th>裝了什麼</th><th width="210">設計想法</th></tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><span class="tag tag-auth">Auth</span><span class="iname">企業登入</span></td>
+                <td><ul class="ilist"><li>Email + 密碼</li><li>SSO 整合（企業版）</li><li>MFA 二步驗證</li><li>忘記密碼流程</li></ul></td>
+                <td class="inote">企業用戶習慣密碼登入，符合公司 IT 政策；SSO 讓大公司可以整合自己的身份系統</td>
+              </tr>
+              <tr>
+                <td><span class="tag tag-auth">Auth</span><span class="iname">首次設定</span></td>
+                <td><ul class="ilist"><li>修改初始密碼</li><li>個人資料補充（職稱、部門）</li><li>通知偏好設定</li></ul></td>
+                <td class="inote">首次登入強制修改密碼，確保安全；職稱資訊幫助跨部門溝通</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <div class="page-nav">
+          <div class="pn" onclick="goto('d-design')">
+            <div class="pn-label">← 上一頁</div>
+            <div class="pn-title">設計概念</div>
+          </div>
+          <div class="pn right" onclick="goto('d-home')">
+            <div class="pn-label">下一頁 →</div>
+            <div class="pn-title">首頁</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- D4 · 首頁 -->
+      <div class="page" id="d-home">
+        <div class="eyebrow">建商端 · 核心概念</div>
+        <h1>首頁</h1>
+        <p class="lead">
+          建商端首頁的設計概念更接近指揮中心——
+          進來的第一眼就要能判斷「今天整體業務健康嗎、哪個案件需要我介入」，
+          不需要逐一點開每個案件才能了解狀況。
+        </p>
+
+        <div class="concept-header">
+          <div class="concept-header-title">
+            <span class="concept-num">!</span>
+            設計核心思路
+          </div>
+          <p>首頁以「案件狀態卡片」為主體，每張卡片顯示該案件最關鍵的三個數字：
+          同意率、本週新回報數、距下個里程碑的天數。管理層五秒內就能掌握全局。</p>
+        </div>
+
+        <h2>頁面元件</h2>
+        <div class="itable-wrap">
+          <table class="itable">
+            <thead>
+              <tr><th width="170">頁面</th><th>裝了什麼</th><th width="210">設計想法</th></tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><span class="tag tag-home">首頁</span><span class="iname">總覽 Dashboard</span></td>
+                <td><ul class="ilist"><li>所有案件狀態卡片</li><li>跨案件待辦匯總</li><li>本週重要里程碑</li><li>快速進入最近使用的案件</li></ul></td>
+                <td class="inote">卡片依風險程度自動排序，最需要注意的案件排在最前面</td>
+              </tr>
+              <tr>
+                <td><span class="tag tag-flow">案件</span><span class="iname">案件詳情</span></td>
+                <td><ul class="ilist"><li>案件資料 + 同意率</li><li>地主名冊（含同意狀態）</li><li>公告 / 投票管理入口</li><li>AI 分析報告</li></ul></td>
+                <td class="inote">所有關鍵資訊在同一頁，業務準備電話前不需要跳頁</td>
+              </tr>
+              <tr>
+                <td><span class="tag tag-ai">AI</span><span class="iname">AI 分析中心</span></td>
+                <td><ul class="ilist"><li>地塊可行性分析</li><li>補償方案試算</li><li>文件摘要工具</li><li>進度風險預測</li></ul></td>
+                <td class="inote">集中所有 AI 工具；分析結果可以儲存到案件，不用重跑</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <div class="page-nav">
+          <div class="pn" onclick="goto('d-auth')">
+            <div class="pn-label">← 上一頁</div>
+            <div class="pn-title">註冊 / 登入</div>
+          </div>
+          <div class="pn right" onclick="goto('d-profile')">
+            <div class="pn-label">下一頁 →</div>
+            <div class="pn-title">個人檔案</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- D5 · 個人檔案 -->
+      <div class="page" id="d-profile">
+        <div class="eyebrow">建商端 · 核心概念</div>
+        <h1>個人檔案</h1>
+        <p class="lead">
+          建商端的個人檔案偏向「工作設定」，
+          讓每個團隊成員可以設定自己的通知偏好和工作顯示方式，
+          同時也是管理員進行帳號與權限管理的入口。
+        </p>
+
+        <h2>頁面元件</h2>
+        <div class="itable-wrap">
+          <table class="itable">
+            <thead>
+              <tr><th width="170">頁面</th><th>裝了什麼</th><th width="210">設計想法</th></tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><span class="tag tag-sys">設定</span><span class="iname">個人資料</span></td>
+                <td><ul class="ilist"><li>姓名、職稱、部門</li><li>負責的案件列表</li><li>聯絡資訊</li></ul></td>
+                <td class="inote">職稱資訊顯示在跨部門溝通的記錄上，方便地主知道在跟誰溝通</td>
+              </tr>
+              <tr>
+                <td><span class="tag tag-sys">設定</span><span class="iname">通知設定</span></td>
+                <td><ul class="ilist"><li>SLA 超時警示</li><li>投票進度通知</li><li>新問題回報通知</li><li>案件里程碑提醒</li></ul></td>
+                <td class="inote">業務和管理層的通知需求不同，讓每個人自訂</td>
+              </tr>
+              <tr>
+                <td><span class="tag tag-sys">設定</span><span class="iname">帳號管理（管理員）</span></td>
+                <td><ul class="ilist"><li>新增 / 停用團隊成員</li><li>角色指派（RBAC）</li><li>SSO / API 設定</li><li>方案管理</li></ul></td>
+                <td class="inote">管理員專屬功能；RBAC 確保資料只讓需要的人看到</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <div class="page-nav">
+          <div class="pn" onclick="goto('d-home')">
+            <div class="pn-label">← 上一頁</div>
+            <div class="pn-title">首頁</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 登入前 Landing Page -->
+      <div class="page" id="r-landing">
+        <div class="eyebrow">登入前 · 信任導向</div>
+        <h1>Landing Page v1.0</h1>
+        <p class="lead">
+          登入前的產品介紹頁，目標是建立信任感，引導訪客免費諮詢或註冊。
+          風格大氣、傳承、柔和，文案以中文為主、英文點綴。
+        </p>
+
+        <h2>頁面架構</h2>
+        <div class="card-grid">
+          <div class="card">
+            <div class="card-icon">🏠</div>
+            <div class="card-title">Hero 區</div>
+            <div class="card-desc">品牌標語「老屋不只是房子，是三代人的家」+ 市場數據統計（150萬+ / &lt;10% / 6個月）+ 雙 CTA 按鈕</div>
+          </div>
+          <div class="card">
+            <div class="card-icon">🛡️</div>
+            <div class="card-title">信任徽章</div>
+            <div class="card-desc">國家專利認證、全程透明、AI 智能媒合、法律保障四張卡片</div>
+          </div>
+          <div class="card">
+            <div class="card-icon">📋</div>
+            <div class="card-title">服務流程</div>
+            <div class="card-desc">四步驟：免費評估 → 現場勘查 → AI 媒合 → 專人陪伴，帶數字步驟指示器</div>
+          </div>
+          <div class="card">
+            <div class="card-icon">🏢</div>
+            <div class="card-title">成功案例</div>
+            <div class="card-desc">信義敦化案（真實）+ 大安文青宅 + 中山河岸美宅，含整合時間、簽約率等數據</div>
+          </div>
+          <div class="card">
+            <div class="card-icon">👥</div>
+            <div class="card-title">專業團隊</div>
+            <div class="card-desc">六位專家卡片：建築師、結構技師、估價師、PCM 工程師、教授、律師</div>
+          </div>
+          <div class="card">
+            <div class="card-icon">📝</div>
+            <div class="card-title">免費諮詢表單</div>
+            <div class="card-desc">姓名 + 電話 + 區域選單 + 屋齡選單 + 備註，深色背景區段</div>
+          </div>
+        </div>
+
+        <h2>互動功能</h2>
+        <div class="callout">
+          <strong>登入/註冊 Modal：</strong>點擊導航列「登入」按鈕彈出 Modal，可切換登入/註冊。<br>
+          <strong>Demo 帳密：</strong>demo@usafe.tw / usafe2026<br>
+          <strong>滾動動畫：</strong>所有區塊使用 IntersectionObserver 實現 fade-up 進場效果。<br>
+          <strong>響應式：</strong>支援桌面、平板、手機三種斷點。
+        </div>
+
+        <h2>程式碼變更</h2>
+        <div class="callout">
+          <strong>v1.0：</strong>usafe-landing-v1.0.html — 淺色版（Parchment 背景）<br>
+          <strong>v1.3（最新）：</strong>usafe-landing-v1.3.html — Superpower.com 風格 + 產品規格整合<br>
+          <strong>v1.1：</strong>usafe-landing-v1.1.html — 溫柔明亮風（保留為歷史版本）<br>
+          <strong>技術：</strong>純 HTML + CSS + Vanilla JS，Noto Serif TC + Noto Sans TC + Inter 字體<br>
+          <strong>品牌色：</strong>以 Figma Design Token Light 模式為準 — bg #F8F5EA、bg-brand #FFB200、CTA #CB3B1B<br>
+          <strong>v1.3 架構：</strong>Hero → Stats → Quote → 3-Step 旅程 → AI Features（交替圖文）→ 會員三階（免費/高級/媒合）→ Dark CTA → Cases → Team → Contact Form
+        </div>
+      </div>
+
+      <!-- 住戶端 · 免費評估精靈 -->
+      <div class="page" id="r-evaluate">
+        <div class="eyebrow">登入前 · 評估入口</div>
+        <h1>免費評估精靈</h1>
+        <p class="lead">
+          獨立的四步驟評估精靈頁面，引導老屋屋主填寫基本資訊、房屋細節，
+          登入後瀏覽合作建商（Netflix 風格），並選擇評估方案送出申請。
+        </p>
+
+        <h2>頁面架構</h2>
+        <div class="card-grid">
+          <div class="card">
+            <div class="card-icon">1</div>
+            <div class="card-title">Step 1 — 基本資訊</div>
+            <div class="card-desc">姓名、手機（2-col）、區域選擇（台北/新北/其他）、屋齡選擇（20-50+ 年）</div>
+          </div>
+          <div class="card">
+            <div class="card-icon">2</div>
+            <div class="card-title">Step 2 — 房屋細節</div>
+            <div class="card-desc">建物類型、樓層數/戶數（2-col）、都更計畫狀態、備註文字框</div>
+          </div>
+          <div class="card">
+            <div class="card-icon">3</div>
+            <div class="card-title">Step 3 — 登入/註冊</div>
+            <div class="card-desc">Email + 密碼，登入後顯示 Netflix 瀏覽區並自動跳至 Step 4</div>
+          </div>
+          <div class="card">
+            <div class="card-icon">4</div>
+            <div class="card-title">Step 4 — 選擇方案</div>
+            <div class="card-desc">三階方案卡片：免費（$0）/ 進階推薦（專案報價）/ VIP（專案報價），點選高亮</div>
+          </div>
+        </div>
+
+        <h2>設計重點</h2>
+        <div class="card-grid">
+          <div class="card">
+            <div class="card-icon">🎯</div>
+            <div class="card-title">進度指示器</div>
+            <div class="card-desc">四步圓圈 + 連線，active = gold 邊框光暈、done = teal 背景打勾、連線 = icon-design 色</div>
+          </div>
+          <div class="card">
+            <div class="card-icon">🎬</div>
+            <div class="card-title">Netflix 瀏覽區</div>
+            <div class="card-desc">深色背景、橫向捲動卡片（280x200px、scroll-snap）、hover scale(1.04)、漸層文字覆蓋</div>
+          </div>
+          <div class="card">
+            <div class="card-icon">📱</div>
+            <div class="card-title">響應式</div>
+            <div class="card-desc">960px：方案卡 1-col；640px：表單 1-col、步驟標籤隱藏、按鈕全寬</div>
+          </div>
+        </div>
+
+        <h2>程式碼變更</h2>
+        <div class="callout">
+          <strong>檔案：</strong>demos/usafe-evaluate.html — 獨立評估精靈頁面<br>
+          <strong>技術：</strong>純 HTML + CSS + Vanilla JS，與 Landing Page 共用 Design Tokens<br>
+          <strong>導航：</strong>固定 pill nav（白灰毛玻璃），含「回首頁」連結至 usafe-landing-v1.6.html<br>
+          <strong>互動：</strong>wizStep 狀態管理、wizNext/wizPrev/wizLogin/wizSubmit、selectPlan 方案選取
+        </div>
+      </div>
+
+      <!-- DEMO · 版本計畫 -->
+      <div class="page" id="demo-plan">
+        <div class="eyebrow">Demo 開發計畫</div>
+        <h1>版本時程與迭代計畫</h1>
+        <p class="lead">
+          Demo 用固定帳密 <strong>demo@usafe.tw / usafe2026</strong>，
+          所有資料內嵌不需後端。版本迭代紀錄在 DEV_LOG.md。
+        </p>
+
+        <h2>版本範圍</h2>
+        <div class="ftable-wrap">
+          <table class="ftable">
+            <thead><tr><th width="80">版本</th><th>範圍</th><th width="160">重點</th></tr></thead>
+            <tbody>
+              <tr><td><span class="fname">v0.1</span></td><td>住戶端完整流程（Onboarding → 登入 → 首頁案例展示牆 → 案例詳情 → 媒合表單 → 成功頁）</td><td class="fwhy">核心體驗跑通</td></tr>
+              <tr><td><span class="fname">v0.2</span></td><td>建商端（登入 → Dashboard → 案件瀏覽 → 案件詳情 → 提案）+ 住戶端優化</td><td class="fwhy">雙端 Demo 完成</td></tr>
+              <tr><td><span class="fname">v0.3</span></td><td>動畫、響應式優化、品牌一致性、Figma 設計稿匯出</td><td class="fwhy">可展示級品質</td></tr>
+              <tr><td><span class="fname">v1.0</span></td><td>登入前 Landing Page（Hero + 信任徽章 + 服務流程 + 成功案例 + 專業團隊 + 免費諮詢表單 + 登入/註冊 Modal）</td><td class="fwhy">Landing 上線</td></tr>
+              <tr><td><span class="fname">v1.1</span></td><td>Cinematic 暗色風格升級：全螢幕影片背景（預留）+ Liquid Glass 毛玻璃效果 + Film Grain 質感 + 淡入上升動畫 + 滾動導航高亮</td><td class="fwhy">電影感升級</td></tr>
+              <tr><td><span class="fname">v1.1.1</span></td><td>Logo 書法圖片替換（白版）+ cover.mov 影片上線 + 專案資料夾整理（assets/brand/demos/docs/tokens 分類）</td><td class="fwhy">品牌整合</td></tr>
+              <tr><td><span class="fname">v1.2</span></td><td>Landing Page 溫柔明亮風轉換：CSS 變數對齊 Figma Light Token（bg #F8F5EA）+ Modal 白底 + Logo 深色版 + 手機導航暖色 + cover.mov 轉 mp4 跨瀏覽器相容</td><td class="fwhy">暖色調上線</td></tr>
+              <tr><td><span class="fname">v1.3</span></td><td>Superpower.com 風格重構：全新頁面架構（Hero → Stats → Quote → 3-Step → AI Features → 會員三階 → Dark CTA → Cases → Team → Form）+ 產品規格文件 v1.0 內容整合（三階段會員路徑、AI 功能架構、用戶心理變化）+ 乾淨按鈕系統 + 交替圖文排版</td><td class="fwhy">風格重構 + 規格整合</td></tr>
+              <tr><td><span class="fname">v1.4</span></td><td>Superpower 深度還原：深色 Pill 形狀 Nav（浮動圓角）+ 全螢幕暗色影片 Hero + 文字靠左 + 單一磚紅 CTA + Logo base64 內嵌（解決路徑問題）+ 影片路徑修正（assets/videos/cover.mp4）+ 白色 Stats 卡片 + 橘色數字步驟連線 + 聯絡表單左右兩欄布局 + 極簡 Nav（3 連結）</td><td class="fwhy">Superpower 精髓 + 問題修復</td></tr>
+              <tr><td><span class="fname">v1.5</span></td><td>Nav 改為白灰中性毛玻璃 + 捲動縮窄 spring 動畫 + Hero 漸層減輕 + 標題改為「更透明更快速」定位 + 文案 50+ 友善 + CTA 改品牌金 gold.500 + Figma token 重點色（teal eyebrow/步驟、gold 連線）+ 手機版白色毛玻璃選單</td><td class="fwhy">中性 Nav + 透明定位</td></tr>
+              <tr><td><span class="fname">v1.6</span></td><td>Hero overlay 更輕 + 步驟徽章改 icon-design 紅 + 步驟連線修正 + Marquee 跑馬燈 + Stats 左圖右卡片佈局 + 案例實拍圖 + 四步驟評估精靈（基本資訊→房屋細節→登入→方案選擇三階）+ Netflix 風格建商瀏覽區 + CTA 改連 #evaluate</td><td class="fwhy">評估精靈 + 建商瀏覽</td></tr>
+              <tr><td><span class="fname">v1.7</span></td><td>獨立免費評估精靈頁面（usafe-evaluate.html）— 四步驟 Wizard（基本資訊→房屋細節→登入→方案選擇）+ 進度指示器（gold/teal/icon-design）+ 三階方案卡片（免費/進階推薦/VIP）+ Netflix 風格建商瀏覽區（登入後顯示）+ 固定 pill nav + 響應式佈局（960/640 斷點）</td><td class="fwhy">獨立評估頁面</td></tr>
+              <tr><td><span class="fname">v2.0</span></td><td>Landing page 全面重新設計（family.co 風格）— 靜態 Hero 圖 + 左對齊佈局 + 直式 Logo + 品牌金 Marquee + 3-column 案例卡片 + 2x2 統計卡片 + 垂直 Timeline 服務流程 + 水平捲動信任卡片 + FAQ 手風琴 + 獨立 CTA 區塊 + Spring 動畫 + 移除 Netflix 瀏覽區/精靈（已獨立頁面）</td><td class="fwhy">Landing 重新設計</td></tr>
+              <tr><td><span class="fname">v2.1</span></td><td>評估精靈 Storytelling 重構 — 四步驟改為章節式旅程（認識您的家→了解房屋狀況→建立帳號→選擇方案）+ 每步驟情感副標題與溫暖提示 + 大號淡化序號裝飾（120px serif, 5% opacity）+ 頂部金色漸層線 + --border-default token (#e6e6e6) + 表單/卡片邊框統一 + Spring 1.2s 動畫 + 面板 blur 轉場 + 瀏覽區圖片路徑更新</td><td class="fwhy">評估精靈重構</td></tr>
+              <tr><td><span class="fname">v2.2</span></td><td>住戶端登入後都更進度儀表板（usafe-dashboard.html）— 左側 Sidebar + 行動版底部 Tab Bar + 7 階段水平進度追蹤器（含 spring 動畫填充、脈搏發光）+ 歡迎橫幅 + 4 欄快速統計 + 最近動態時間軸 + 重要文件列表 + 服務團隊聯絡卡 + 下一步提示 + Demo 模式預填陳太太資料 + 全響應式（桌機/平板/手機）</td><td class="fwhy">住戶儀表板</td></tr>
+              <tr><td><span class="fname">v2.3</span></td><td>成功案例深度頁面（usafe-story.html）— 沉浸式 Before → Process → After 捲動敘事，陳家大安區都更案例。全寬 Hero + 老屋情感照片 + 屋主引言（大號 serif）+ 屋況統計 + 5 階段垂直時間軸（icon-design 色線、spring 動畫進場）+ 新舊對比照片 + 改建後數據（+10坪/12F/+180%增值）+ 3 張重點卡片 + 情感 CTA。完全對齊 v2.0 設計語言（CSS tokens、pill nav、ink SVG filters、fade-up 動畫、glassmorphism nav、響應式）</td><td class="fwhy">案例深度頁</td></tr>
+              <tr><td><span class="fname">v2.4</span></td><td>部落格列表頁（usafe-blog.html）+ Story 重寫為 family.co 部落格風格 + Dashboard 重寫為 UberEats feed 風格 + 全站 Nav 統一（pill nav、屋主故事連結、mobile menu 修復與 × 關閉按鈕）</td><td class="fwhy">部落格＋Nav統一</td></tr>
+              <tr><td><span class="fname">v2.5</span></td><td>Landing page 跑馬燈改寫為 requestAnimationFrame 引擎 — 滾動速度影響跑馬燈速度、方向自動切換（下滑向左/上滑向右）、平滑衰減、無縫循環，對齊 Framer ScrollMarquee 元件邏輯</td><td class="fwhy">Marquee rAF</td></tr>
+              <tr><td><span class="fname">v2.6</span></td><td>評估頁 .warm-note 備註背景改為 var(--bg) 去除白底突兀感 + 全站登入按鈕（4 頁 × 桌面/手機共 8 處）統一改為直接前往 Dashboard</td><td class="fwhy">備註底色＋登入流程</td></tr>
+            </tbody>
+          </table>
+        </div>
+
+        <h2>色彩系統更新</h2>
+        <div class="callout">
+          <strong>年輕活力怎麼加？</strong><br>
+          品牌色（金赭 #C8A75D、水墨 #1A1208、宣紙底 #FFFBEE）保持傳承感。
+          新增 Teal 綠 <strong>#2AA39F</strong> 和 Sky 藍 <strong>#4A90D9</strong> 作為功能色，
+          搭配磚紅 #CB3B1B 作為 CTA。三色穿插帶出年輕感，不會讓整體太沉穩。
+        </div>
+
+        <h2>住戶端核心流程</h2>
+        <p>兩條路都有入口——看案例被吸引後進入，或直接點「開始媒合」：</p>
+        <div class="card-grid">
+          <div class="card">
+            <div class="card-icon">📖</div>
+            <div class="card-title">路線 A：被案例吸引</div>
+            <div class="card-desc">首頁看到成功案例 → 點進詳情被打動 → 選擇此建商 → 填資料 → 送出</div>
+          </div>
+          <div class="card">
+            <div class="card-icon">🚀</div>
+            <div class="card-title">路線 B：直接行動</div>
+            <div class="card-desc">首頁點「開始媒合」CTA → 填房屋資料 → AI 推薦建商 → 選擇 → 送出</div>
+          </div>
+        </div>
+
+        <h2>設計風格參考</h2>
+        <div class="card-grid">
+          <div class="card">
+            <div class="card-icon">🎬</div>
+            <div class="card-title">Netflix</div>
+            <div class="card-desc">Hero 大圖輪播 + 橫向滾動卡片列 → 用在首頁成功案例展示</div>
+          </div>
+          <div class="card">
+            <div class="card-icon">✨</div>
+            <div class="card-title">Claude</div>
+            <div class="card-desc">極簡、大留白、步驟清楚 → 用在整體操作流程和表單設計</div>
+          </div>
+          <div class="card">
+            <div class="card-icon">🍔</div>
+            <div class="card-title">Uber Eats</div>
+            <div class="card-desc">操作簡單直覺、大按鈕 → 用在整體操作邏輯和按鈕設計</div>
+          </div>
+          <div class="card">
+            <div class="card-icon">🏡</div>
+            <div class="card-title">Airbnb</div>
+            <div class="card-desc">圖片為主的卡片、分步驟表單 → 可參考案例卡和媒合流程</div>
+          </div>
+        </div>
+
+        <h2>首頁資料規劃</h2>
+        <div class="callout">
+          <strong>信義敦化案（真實案例）</strong><br>
+          三棟四層老公寓 → 地上 12 層豪華大樓。
+          原本價值僅 3,000 萬，危險等級 65%，6 個月內百分之百簽約。
+          建商：元捷建設。
+          其他案例用假資料補充（大安文青宅/潤泰創新、中山河岸美宅/興富發建設等）。
+        </div>
+
+        <h2>業主 PPT 核心資料整合</h2>
+        <p>以下資料來自業主簡報（JULES_251130.pdf），可用於 Onboarding、首頁和案例頁面：</p>
+        <div class="card-grid">
+          <div class="card">
+            <div class="card-icon">📊</div>
+            <div class="card-title">市場數據</div>
+            <div class="card-desc">雙北 70% 住宅屋齡逾 30 年（150 萬戶）。都更成功率 &lt;10%，整合期平均 8-10 年。台灣位處環太平洋地震帶，36 條活動斷層。</div>
+          </div>
+          <div class="card">
+            <div class="card-icon">🏢</div>
+            <div class="card-title">七端生態系統</div>
+            <div class="card-desc">住戶端、建商端、全案管理團隊端、政府端、金融端、教育端、管理端。專利編號 114212560。</div>
+          </div>
+          <div class="card">
+            <div class="card-icon">👥</div>
+            <div class="card-title">專業團隊</div>
+            <div class="card-desc">李明遠建築師（20年都更經驗）、林朝清結構技師（國家級耐震標章）、鐘少佑估價師、王冠閔 PCM 工程師、林宏澔教授、劉文瑞律師。</div>
+          </div>
+          <div class="card">
+            <div class="card-icon">⚡</div>
+            <div class="card-title">五大核心變革</div>
+            <div class="card-desc">數據驅動整合、全面透明化、一站式整合、自主更新會+數位民主、可預測的成功率。</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ═══════════════════════════════════════════
+           DESIGN TOKENS（品牌資產 Tab）
+      ═══════════════════════════════════════════ -->
+      <div class="page" id="r-tokens">
+        <div class="eyebrow">品牌資產 · Design Tokens</div>
+        <h1>設計變數總覽</h1>
+        <p class="lead">
+          齊家厝的設計系統以 Figma Tokens 為單一真實來源（Single Source of Truth），
+          所有色彩、間距、圓角、字型都經由變數管理，確保設計與開發一致。
+          本頁彙整全部 Token 定義與設計意圖。
+        </p>
+
+        <!-- ─── 色彩系統 ─── -->
+        <h2>色彩系統 Color Palette</h2>
+        <p>齊家厝的色彩以「厝」的材料質感為靈感——水墨的深沉、砂岩的溫潤、金箔的光澤、磚瓦的生命力。每個色階 100–1000 共十級，100 最淺、1000 最深，500 為品牌主色。</p>
+
+        <h3 style="font-size:16px; font-weight:600; color:var(--t1); margin:32px 0 12px;">Ink 水墨</h3>
+        <p style="font-size:14px; color:var(--t4); margin-bottom:16px;">UI 的文字、圖示、邊框主要取自此色階。1000 (#1A1208) 是品牌最深色，帶暖調避免純黑的冰冷感。</p>
+        <div style="display:flex; gap:4px; margin-bottom:24px; flex-wrap:wrap;">
+          <div style="flex:1; min-width:56px; text-align:center;">
+            <div style="height:48px; border-radius:8px; background:#f4f1e7; border:1px solid var(--border);"></div>
+            <div style="font-size:11px; color:var(--t4); margin-top:6px;">100</div>
+          </div>
+          <div style="flex:1; min-width:56px; text-align:center;">
+            <div style="height:48px; border-radius:8px; background:#e9e5db; border:1px solid var(--border);"></div>
+            <div style="font-size:11px; color:var(--t4); margin-top:6px;">200</div>
+          </div>
+          <div style="flex:1; min-width:56px; text-align:center;">
+            <div style="height:48px; border-radius:8px; background:#d9d5cb;"></div>
+            <div style="font-size:11px; color:var(--t4); margin-top:6px;">300</div>
+          </div>
+          <div style="flex:1; min-width:56px; text-align:center;">
+            <div style="height:48px; border-radius:8px; background:#c2beb4;"></div>
+            <div style="font-size:11px; color:var(--t4); margin-top:6px;">400</div>
+          </div>
+          <div style="flex:1; min-width:56px; text-align:center;">
+            <div style="height:48px; border-radius:8px; background:#a29d93;"></div>
+            <div style="font-size:11px; color:var(--t4); margin-top:6px;">500</div>
+          </div>
+          <div style="flex:1; min-width:56px; text-align:center;">
+            <div style="height:48px; border-radius:8px; background:#807a70;"></div>
+            <div style="font-size:11px; color:var(--t4); margin-top:6px;">600</div>
+          </div>
+          <div style="flex:1; min-width:56px; text-align:center;">
+            <div style="height:48px; border-radius:8px; background:#635c52;"></div>
+            <div style="font-size:11px; color:var(--t4); margin-top:6px;">700</div>
+          </div>
+          <div style="flex:1; min-width:56px; text-align:center;">
+            <div style="height:48px; border-radius:8px; background:#474036;"></div>
+            <div style="font-size:11px; color:var(--t4); margin-top:6px;">800</div>
+          </div>
+          <div style="flex:1; min-width:56px; text-align:center;">
+            <div style="height:48px; border-radius:8px; background:#2e271d;"></div>
+            <div style="font-size:11px; color:var(--t4); margin-top:6px;">900</div>
+          </div>
+          <div style="flex:1; min-width:56px; text-align:center;">
+            <div style="height:48px; border-radius:8px; background:#1a1208;"></div>
+            <div style="font-size:11px; color:var(--t4); margin-top:6px;">1000</div>
+          </div>
+        </div>
+
+        <h3 style="font-size:16px; font-weight:600; color:var(--t1); margin:32px 0 12px;">Sand 砂岩</h3>
+        <p style="font-size:14px; color:var(--t4); margin-bottom:16px;">背景、卡片底色的基底。100 (#FFFBEE) 是 Light Mode 的主背景色，帶米白暖調讓使用者感受到「家」的溫暖。</p>
+        <div style="display:flex; gap:4px; margin-bottom:24px; flex-wrap:wrap;">
+          <div style="flex:1; min-width:56px; text-align:center;">
+            <div style="height:48px; border-radius:8px; background:#fffbee; border:1px solid var(--border);"></div>
+            <div style="font-size:11px; color:var(--t4); margin-top:6px;">100</div>
+          </div>
+          <div style="flex:1; min-width:56px; text-align:center;">
+            <div style="height:48px; border-radius:8px; background:#f8f2e3; border:1px solid var(--border);"></div>
+            <div style="font-size:11px; color:var(--t4); margin-top:6px;">200</div>
+          </div>
+          <div style="flex:1; min-width:56px; text-align:center;">
+            <div style="height:48px; border-radius:8px; background:#eee6d4;"></div>
+            <div style="font-size:11px; color:var(--t4); margin-top:6px;">300</div>
+          </div>
+          <div style="flex:1; min-width:56px; text-align:center;">
+            <div style="height:48px; border-radius:8px; background:#e0d4bd;"></div>
+            <div style="font-size:11px; color:var(--t4); margin-top:6px;">400</div>
+          </div>
+          <div style="flex:1; min-width:56px; text-align:center;">
+            <div style="height:48px; border-radius:8px; background:#c4b090;"></div>
+            <div style="font-size:11px; color:var(--t4); margin-top:6px;">500</div>
+          </div>
+          <div style="flex:1; min-width:56px; text-align:center;">
+            <div style="height:48px; border-radius:8px; background:#a29075;"></div>
+            <div style="font-size:11px; color:var(--t4); margin-top:6px;">600</div>
+          </div>
+          <div style="flex:1; min-width:56px; text-align:center;">
+            <div style="height:48px; border-radius:8px; background:#80715a;"></div>
+            <div style="font-size:11px; color:var(--t4); margin-top:6px;">700</div>
+          </div>
+          <div style="flex:1; min-width:56px; text-align:center;">
+            <div style="height:48px; border-radius:8px; background:#615441;"></div>
+            <div style="font-size:11px; color:var(--t4); margin-top:6px;">800</div>
+          </div>
+          <div style="flex:1; min-width:56px; text-align:center;">
+            <div style="height:48px; border-radius:8px; background:#443a2a;"></div>
+            <div style="font-size:11px; color:var(--t4); margin-top:6px;">900</div>
+          </div>
+          <div style="flex:1; min-width:56px; text-align:center;">
+            <div style="height:48px; border-radius:8px; background:#2b2216;"></div>
+            <div style="font-size:11px; color:var(--t4); margin-top:6px;">1000</div>
+          </div>
+        </div>
+
+        <h3 style="font-size:16px; font-weight:600; color:var(--t1); margin:32px 0 12px;">Gold 金赭</h3>
+        <p style="font-size:14px; color:var(--t4); margin-bottom:16px;">品牌主色。500 (#C8A75D) 用於 CTA 按鈕、Active 狀態、品牌標識。金色傳達「價值」與「信任」，是齊家厝最重要的視覺識別。</p>
+        <div style="display:flex; gap:4px; margin-bottom:24px; flex-wrap:wrap;">
+          <div style="flex:1; min-width:56px; text-align:center;">
+            <div style="height:48px; border-radius:8px; background:#faf5e7; border:1px solid var(--border);"></div>
+            <div style="font-size:11px; color:var(--t4); margin-top:6px;">100</div>
+          </div>
+          <div style="flex:1; min-width:56px; text-align:center;">
+            <div style="height:48px; border-radius:8px; background:#f5eeda; border:1px solid var(--border);"></div>
+            <div style="font-size:11px; color:var(--t4); margin-top:6px;">200</div>
+          </div>
+          <div style="flex:1; min-width:56px; text-align:center;">
+            <div style="height:48px; border-radius:8px; background:#eee3c7;"></div>
+            <div style="font-size:11px; color:var(--t4); margin-top:6px;">300</div>
+          </div>
+          <div style="flex:1; min-width:56px; text-align:center;">
+            <div style="height:48px; border-radius:8px; background:#e5d4ac;"></div>
+            <div style="font-size:11px; color:var(--t4); margin-top:6px;">400</div>
+          </div>
+          <div style="flex:1; min-width:56px; text-align:center;">
+            <div style="height:48px; border-radius:8px; background:#c8a75d;"></div>
+            <div style="font-size:11px; color:var(--t2); margin-top:6px; font-weight:600;">500 ★</div>
+          </div>
+          <div style="flex:1; min-width:56px; text-align:center;">
+            <div style="height:48px; border-radius:8px; background:#a98c4e;"></div>
+            <div style="font-size:11px; color:var(--t4); margin-top:6px;">600</div>
+          </div>
+          <div style="flex:1; min-width:56px; text-align:center;">
+            <div style="height:48px; border-radius:8px; background:#89713e;"></div>
+            <div style="font-size:11px; color:var(--t4); margin-top:6px;">700</div>
+          </div>
+          <div style="flex:1; min-width:56px; text-align:center;">
+            <div style="height:48px; border-radius:8px; background:#6a572f;"></div>
+            <div style="font-size:11px; color:var(--t4); margin-top:6px;">800</div>
+          </div>
+          <div style="flex:1; min-width:56px; text-align:center;">
+            <div style="height:48px; border-radius:8px; background:#4b3c20;"></div>
+            <div style="font-size:11px; color:var(--t4); margin-top:6px;">900</div>
+          </div>
+          <div style="flex:1; min-width:56px; text-align:center;">
+            <div style="height:48px; border-radius:8px; background:#2f2412;"></div>
+            <div style="font-size:11px; color:var(--t4); margin-top:6px;">1000</div>
+          </div>
+        </div>
+
+        <h3 style="font-size:16px; font-weight:600; color:var(--t1); margin:32px 0 12px;">Amber 琥珀</h3>
+        <p style="font-size:14px; color:var(--t4); margin-bottom:16px;">警告、提示用色。500 (#FFB200) 鮮明但不刺眼，用於 Warning 狀態和需要引起注意但非危險的場景。</p>
+        <div style="display:flex; gap:4px; margin-bottom:24px; flex-wrap:wrap;">
+          <div style="flex:1; min-width:56px; text-align:center;">
+            <div style="height:48px; border-radius:8px; background:#fdf6e2; border:1px solid var(--border);"></div>
+            <div style="font-size:11px; color:var(--t4); margin-top:6px;">100</div>
+          </div>
+          <div style="flex:1; min-width:56px; text-align:center;">
+            <div style="height:48px; border-radius:8px; background:#fdefcc;"></div>
+            <div style="font-size:11px; color:var(--t4); margin-top:6px;">200</div>
+          </div>
+          <div style="flex:1; min-width:56px; text-align:center;">
+            <div style="height:48px; border-radius:8px; background:#fee6ad;"></div>
+            <div style="font-size:11px; color:var(--t4); margin-top:6px;">300</div>
+          </div>
+          <div style="flex:1; min-width:56px; text-align:center;">
+            <div style="height:48px; border-radius:8px; background:#fed982;"></div>
+            <div style="font-size:11px; color:var(--t4); margin-top:6px;">400</div>
+          </div>
+          <div style="flex:1; min-width:56px; text-align:center;">
+            <div style="height:48px; border-radius:8px; background:#ffb200;"></div>
+            <div style="font-size:11px; color:var(--t4); margin-top:6px;">500</div>
+          </div>
+          <div style="flex:1; min-width:56px; text-align:center;">
+            <div style="height:48px; border-radius:8px; background:#d69501;"></div>
+            <div style="font-size:11px; color:var(--t4); margin-top:6px;">600</div>
+          </div>
+          <div style="flex:1; min-width:56px; text-align:center;">
+            <div style="height:48px; border-radius:8px; background:#ad7803;"></div>
+            <div style="font-size:11px; color:var(--t4); margin-top:6px;">700</div>
+          </div>
+          <div style="flex:1; min-width:56px; text-align:center;">
+            <div style="height:48px; border-radius:8px; background:#835c04;"></div>
+            <div style="font-size:11px; color:var(--t4); margin-top:6px;">800</div>
+          </div>
+          <div style="flex:1; min-width:56px; text-align:center;">
+            <div style="height:48px; border-radius:8px; background:#5a3f06;"></div>
+            <div style="font-size:11px; color:var(--t4); margin-top:6px;">900</div>
+          </div>
+          <div style="flex:1; min-width:56px; text-align:center;">
+            <div style="height:48px; border-radius:8px; background:#352507;"></div>
+            <div style="font-size:11px; color:var(--t4); margin-top:6px;">1000</div>
+          </div>
+        </div>
+
+        <h3 style="font-size:16px; font-weight:600; color:var(--t1); margin:32px 0 12px;">Orange 橙</h3>
+        <p style="font-size:14px; color:var(--t4); margin-bottom:16px;">設計端標記用色。500 (#FF8000) 用於 Design 類狀態——在 Figma 協作或設計審核場景中標示設計相關訊息。</p>
+        <div style="display:flex; gap:4px; margin-bottom:24px; flex-wrap:wrap;">
+          <div style="flex:1; min-width:56px; text-align:center;">
+            <div style="height:48px; border-radius:8px; background:#fdf3e2; border:1px solid var(--border);"></div>
+            <div style="font-size:11px; color:var(--t4); margin-top:6px;">100</div>
+          </div>
+          <div style="flex:1; min-width:56px; text-align:center;">
+            <div style="height:48px; border-radius:8px; background:#fde8cc;"></div>
+            <div style="font-size:11px; color:var(--t4); margin-top:6px;">200</div>
+          </div>
+          <div style="flex:1; min-width:56px; text-align:center;">
+            <div style="height:48px; border-radius:8px; background:#fed8ad;"></div>
+            <div style="font-size:11px; color:var(--t4); margin-top:6px;">300</div>
+          </div>
+          <div style="flex:1; min-width:56px; text-align:center;">
+            <div style="height:48px; border-radius:8px; background:#fec282;"></div>
+            <div style="font-size:11px; color:var(--t4); margin-top:6px;">400</div>
+          </div>
+          <div style="flex:1; min-width:56px; text-align:center;">
+            <div style="height:48px; border-radius:8px; background:#ff8000;"></div>
+            <div style="font-size:11px; color:var(--t4); margin-top:6px;">500</div>
+          </div>
+          <div style="flex:1; min-width:56px; text-align:center;">
+            <div style="height:48px; border-radius:8px; background:#d66c01;"></div>
+            <div style="font-size:11px; color:var(--t4); margin-top:6px;">600</div>
+          </div>
+          <div style="flex:1; min-width:56px; text-align:center;">
+            <div style="height:48px; border-radius:8px; background:#ad5803;"></div>
+            <div style="font-size:11px; color:var(--t4); margin-top:6px;">700</div>
+          </div>
+          <div style="flex:1; min-width:56px; text-align:center;">
+            <div style="height:48px; border-radius:8px; background:#834504;"></div>
+            <div style="font-size:11px; color:var(--t4); margin-top:6px;">800</div>
+          </div>
+          <div style="flex:1; min-width:56px; text-align:center;">
+            <div style="height:48px; border-radius:8px; background:#5a3106;"></div>
+            <div style="font-size:11px; color:var(--t4); margin-top:6px;">900</div>
+          </div>
+          <div style="flex:1; min-width:56px; text-align:center;">
+            <div style="height:48px; border-radius:8px; background:#351f07;"></div>
+            <div style="font-size:11px; color:var(--t4); margin-top:6px;">1000</div>
+          </div>
+        </div>
+
+        <h3 style="font-size:16px; font-weight:600; color:var(--t1); margin:32px 0 12px;">Red 磚紅</h3>
+        <p style="font-size:14px; color:var(--t4); margin-bottom:16px;">錯誤、危險狀態用色。500 (#CB3B1B) 取自台灣傳統紅磚的色調，既有警示力道又不失品牌溫度。</p>
+        <div style="display:flex; gap:4px; margin-bottom:24px; flex-wrap:wrap;">
+          <div style="flex:1; min-width:56px; text-align:center;">
+            <div style="height:48px; border-radius:8px; background:#faefe3; border:1px solid var(--border);"></div>
+            <div style="font-size:11px; color:var(--t4); margin-top:6px;">100</div>
+          </div>
+          <div style="flex:1; min-width:56px; text-align:center;">
+            <div style="height:48px; border-radius:8px; background:#f6ddd0;"></div>
+            <div style="font-size:11px; color:var(--t4); margin-top:6px;">200</div>
+          </div>
+          <div style="flex:1; min-width:56px; text-align:center;">
+            <div style="height:48px; border-radius:8px; background:#efc5b4;"></div>
+            <div style="font-size:11px; color:var(--t4); margin-top:6px;">300</div>
+          </div>
+          <div style="flex:1; min-width:56px; text-align:center;">
+            <div style="height:48px; border-radius:8px; background:#e6a28e;"></div>
+            <div style="font-size:11px; color:var(--t4); margin-top:6px;">400</div>
+          </div>
+          <div style="flex:1; min-width:56px; text-align:center;">
+            <div style="height:48px; border-radius:8px; background:#cb3b1b;"></div>
+            <div style="font-size:11px; color:var(--t4); margin-top:6px;">500</div>
+          </div>
+          <div style="flex:1; min-width:56px; text-align:center;">
+            <div style="height:48px; border-radius:8px; background:#ab3418;"></div>
+            <div style="font-size:11px; color:var(--t4); margin-top:6px;">600</div>
+          </div>
+          <div style="flex:1; min-width:56px; text-align:center;">
+            <div style="height:48px; border-radius:8px; background:#8b2c14;"></div>
+            <div style="font-size:11px; color:var(--t4); margin-top:6px;">700</div>
+          </div>
+          <div style="flex:1; min-width:56px; text-align:center;">
+            <div style="height:48px; border-radius:8px; background:#6b2511;"></div>
+            <div style="font-size:11px; color:var(--t4); margin-top:6px;">800</div>
+          </div>
+          <div style="flex:1; min-width:56px; text-align:center;">
+            <div style="height:48px; border-radius:8px; background:#4c1d0d;"></div>
+            <div style="font-size:11px; color:var(--t4); margin-top:6px;">900</div>
+          </div>
+          <div style="flex:1; min-width:56px; text-align:center;">
+            <div style="height:48px; border-radius:8px; background:#2f170a;"></div>
+            <div style="font-size:11px; color:var(--t4); margin-top:6px;">1000</div>
+          </div>
+        </div>
+
+        <!-- ─── 語義色彩 ─── -->
+        <h2>語義色彩 Semantic Colors</h2>
+        <p>Primitives 之上是語義層——同一個變數名稱在 Light / Dark 模式下指向不同的基礎色票，實現一鍵切換主題。</p>
+
+        <div class="table-wrap" style="margin:24px 0;">
+          <table>
+            <thead><tr><th style="width:200px;">Token</th><th>用途</th><th style="width:120px;">Light</th><th style="width:120px;">Dark</th></tr></thead>
+            <tbody>
+              <tr><td><code>bg.default</code></td><td>頁面主背景</td><td>Sand 100</td><td>Grey 1000</td></tr>
+              <tr><td><code>bg.secondary</code></td><td>卡片、區塊底色</td><td>Sand 200</td><td>Grey 900</td></tr>
+              <tr><td><code>bg.brand</code></td><td>品牌按鈕、高亮區域</td><td>Yellow 500</td><td>Yellow 500</td></tr>
+              <tr><td><code>bg.danger</code></td><td>錯誤、刪除背景</td><td>Brick Red 500</td><td>Brick Red 500</td></tr>
+              <tr><td><code>text.default</code></td><td>主要文字</td><td>Ink 800</td><td>Black 800</td></tr>
+              <tr><td><code>text.secondary</code></td><td>次要說明文字</td><td>Ink 500</td><td>Black 500</td></tr>
+              <tr><td><code>text.brand</code></td><td>品牌色文字、連結</td><td>Yellow 600</td><td>Yellow 500</td></tr>
+              <tr><td><code>border.default</code></td><td>元件邊框</td><td>Grey 200</td><td>Grey 200</td></tr>
+              <tr><td><code>border.brand</code></td><td>選中、Active 邊框</td><td>Gold Ochre 300</td><td>Gold Ochre 300</td></tr>
+              <tr><td><code>icon.default</code></td><td>一般圖示</td><td>Ink 800</td><td>Black 800</td></tr>
+              <tr><td><code>icon.brand</code></td><td>品牌色圖示</td><td>Yellow 600</td><td>Yellow 500</td></tr>
+            </tbody>
+          </table>
+        </div>
+
+        <!-- ─── 間距系統 ─── -->
+        <h2>間距系統 Spacing</h2>
+        <p>以 4px 為基本單位（Base-4 Grid），確保所有元素間距都是 4 的倍數，視覺上自然對齊。間距越大代表元素之間的關聯性越弱。</p>
+
+        <div style="display:flex; flex-direction:column; gap:12px; margin:24px 0;">
+          <div style="display:flex; align-items:center; gap:16px;">
+            <code style="width:80px; font-size:13px; color:var(--t2);">spacer-0</code>
+            <div style="width:0px; height:24px; background:var(--accent); border-radius:4px;"></div>
+            <span style="font-size:13px; color:var(--t4);">0px — 無間距</span>
+          </div>
+          <div style="display:flex; align-items:center; gap:16px;">
+            <code style="width:80px; font-size:13px; color:var(--t2);">spacer-1</code>
+            <div style="width:4px; height:24px; background:var(--accent); border-radius:4px;"></div>
+            <span style="font-size:13px; color:var(--t4);">4px — 圖示與文字間距</span>
+          </div>
+          <div style="display:flex; align-items:center; gap:16px;">
+            <code style="width:80px; font-size:13px; color:var(--t2);">spacer-2</code>
+            <div style="width:8px; height:24px; background:var(--accent); border-radius:4px;"></div>
+            <span style="font-size:13px; color:var(--t4);">8px — 緊密元素內間距</span>
+          </div>
+          <div style="display:flex; align-items:center; gap:16px;">
+            <code style="width:80px; font-size:13px; color:var(--t2);">spacer-3</code>
+            <div style="width:16px; height:24px; background:var(--accent); border-radius:4px;"></div>
+            <span style="font-size:13px; color:var(--t4);">16px — 元件內部 padding</span>
+          </div>
+          <div style="display:flex; align-items:center; gap:16px;">
+            <code style="width:80px; font-size:13px; color:var(--t2);">spacer-4</code>
+            <div style="width:24px; height:24px; background:var(--accent); border-radius:4px;"></div>
+            <span style="font-size:13px; color:var(--t4);">24px — 區塊間距、卡片 padding</span>
+          </div>
+          <div style="display:flex; align-items:center; gap:16px;">
+            <code style="width:80px; font-size:13px; color:var(--t2);">spacer-5</code>
+            <div style="width:32px; height:24px; background:var(--accent); border-radius:4px;"></div>
+            <span style="font-size:13px; color:var(--t4);">32px — Section 分隔</span>
+          </div>
+          <div style="display:flex; align-items:center; gap:16px;">
+            <code style="width:80px; font-size:13px; color:var(--t2);">spacer-6</code>
+            <div style="width:40px; height:24px; background:var(--accent); border-radius:4px;"></div>
+            <span style="font-size:13px; color:var(--t4);">40px — 大區塊、頁面段落分隔</span>
+          </div>
+        </div>
+
+        <!-- ─── 圓角系統 ─── -->
+        <h2>圓角系統 Border Radius</h2>
+        <p>圓角大小傳達不同的個性——小圓角精確俐落，大圓角親切柔軟。齊家厝偏好 medium (5px) 到 large (13px) 的圓角，在「專業」與「溫暖」之間取得平衡。</p>
+
+        <div style="display:flex; gap:20px; margin:24px 0; flex-wrap:wrap;">
+          <div style="text-align:center;">
+            <div style="width:80px; height:80px; background:var(--accent-dim); border:2px solid var(--accent); border-radius:0;"></div>
+            <div style="font-size:13px; color:var(--t2); margin-top:8px; font-weight:600;">none</div>
+            <div style="font-size:11px; color:var(--t4);">0px</div>
+            <div style="font-size:11px; color:var(--t5);">表格、分隔線</div>
+          </div>
+          <div style="text-align:center;">
+            <div style="width:80px; height:80px; background:var(--accent-dim); border:2px solid var(--accent); border-radius:2px;"></div>
+            <div style="font-size:13px; color:var(--t2); margin-top:8px; font-weight:600;">small</div>
+            <div style="font-size:11px; color:var(--t4);">2px</div>
+            <div style="font-size:11px; color:var(--t5);">Badge、Tag</div>
+          </div>
+          <div style="text-align:center;">
+            <div style="width:80px; height:80px; background:var(--accent-dim); border:2px solid var(--accent); border-radius:5px;"></div>
+            <div style="font-size:13px; color:var(--t2); margin-top:8px; font-weight:600;">medium</div>
+            <div style="font-size:11px; color:var(--t4);">5px</div>
+            <div style="font-size:11px; color:var(--t5);">輸入框、下拉選單</div>
+          </div>
+          <div style="text-align:center;">
+            <div style="width:80px; height:80px; background:var(--accent-dim); border:2px solid var(--accent); border-radius:13px;"></div>
+            <div style="font-size:13px; color:var(--t2); margin-top:8px; font-weight:600;">large</div>
+            <div style="font-size:11px; color:var(--t4);">13px</div>
+            <div style="font-size:11px; color:var(--t5);">卡片、模態框</div>
+          </div>
+          <div style="text-align:center;">
+            <div style="width:80px; height:80px; background:var(--accent-dim); border:2px solid var(--accent); border-radius:9999px;"></div>
+            <div style="font-size:13px; color:var(--t2); margin-top:8px; font-weight:600;">full</div>
+            <div style="font-size:11px; color:var(--t4);">9999px</div>
+            <div style="font-size:11px; color:var(--t5);">頭像、膠囊按鈕</div>
+          </div>
+        </div>
+
+        <!-- ─── 字型系統 ─── -->
+        <h2>字型系統 Typography</h2>
+        <p>字體選用 Inter 作為預設和標題字型，Roboto Mono 作為等寬程式碼字型。字重以 450（regular）和 550（strong/heavy）兩級為主，避免過多層次造成視覺混亂。</p>
+
+        <h3 style="font-size:16px; font-weight:600; color:var(--t1); margin:32px 0 12px;">Font Family</h3>
+        <div class="table-wrap" style="margin:0 0 32px;">
+          <table>
+            <thead><tr><th>Token</th><th>字型</th><th>用途</th></tr></thead>
+            <tbody>
+              <tr><td><code>font.family.default</code></td><td style="font-family:Inter,system-ui,sans-serif;">Inter</td><td>UI 文字、按鈕、表單</td></tr>
+              <tr><td><code>font.family.display</code></td><td style="font-family:Inter,system-ui,sans-serif;">Inter</td><td>大標題、Hero 區域</td></tr>
+              <tr><td><code>font.family.mono</code></td><td style="font-family:'Roboto Mono',monospace;">Roboto Mono</td><td>程式碼、Token 名稱</td></tr>
+            </tbody>
+          </table>
+        </div>
+
+        <h3 style="font-size:16px; font-weight:600; color:var(--t1); margin:32px 0 12px;">Heading 標題</h3>
+        <div style="display:flex; flex-direction:column; gap:20px; margin:0 0 32px;">
+          <div style="border-bottom:1px solid var(--border); padding-bottom:16px;">
+            <div style="font-size:48px; font-weight:450; letter-spacing:-3px; line-height:56px; color:var(--t1);">Display 48/56</div>
+            <div style="font-size:12px; color:var(--t5); margin-top:4px;">heading.display · 48px / 56px line-height / -3px tracking / weight 450</div>
+          </div>
+          <div style="border-bottom:1px solid var(--border); padding-bottom:16px;">
+            <div style="font-size:24px; font-weight:550; letter-spacing:-1.7px; line-height:32px; color:var(--t1);">Large 24/32</div>
+            <div style="font-size:12px; color:var(--t5); margin-top:4px;">heading.large · 24px / 32px line-height / -1.7px tracking / weight 550</div>
+          </div>
+          <div style="border-bottom:1px solid var(--border); padding-bottom:16px;">
+            <div style="font-size:15px; font-weight:550; letter-spacing:-0.5px; line-height:25px; color:var(--t1);">Medium 15/25</div>
+            <div style="font-size:12px; color:var(--t5); margin-top:4px;">heading.medium · 15px / 25px line-height / -0.5px tracking / weight 550</div>
+          </div>
+          <div>
+            <div style="font-size:13px; font-weight:550; letter-spacing:-0.25px; line-height:22px; color:var(--t1);">Small 13/22</div>
+            <div style="font-size:12px; color:var(--t5); margin-top:4px;">heading.small · 13px / 22px line-height / -0.25px tracking / weight 550</div>
+          </div>
+        </div>
+
+        <h3 style="font-size:16px; font-weight:600; color:var(--t1); margin:32px 0 12px;">Body 內文</h3>
+        <div class="table-wrap" style="margin:0 0 32px;">
+          <table>
+            <thead><tr><th>Token</th><th>Size</th><th>Line Height</th><th>Weight</th><th>Tracking</th></tr></thead>
+            <tbody>
+              <tr><td><code>body.xlarge</code></td><td>17px</td><td>26px</td><td>450</td><td>-0.25px</td></tr>
+              <tr><td><code>body.large</code></td><td>15px</td><td>24px</td><td>450</td><td>-0.25px</td></tr>
+              <tr><td><code>body.medium</code></td><td>13px</td><td>22px</td><td>450</td><td>0.5px</td></tr>
+              <tr><td><code>body.small</code></td><td>11px</td><td>16px</td><td>450</td><td>0.5px</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <p style="font-size:14px; color:var(--t4);">每個 Body 級別都有對應的 <code>strong</code> 變體（weight 550），用於粗體強調。</p>
+
+      </div><!-- /#r-tokens -->
+
+      <!-- ═══════════════════════════════════════════
+           TAB PLACEHOLDER (for dev, iteration, reference tabs)
+      ═══════════════════════════════════════════ -->
+      <div class="page" id="tab-placeholder">
+        <div class="eyebrow">即將推出</div>
+        <h1 class="ph-title">開發實作</h1>
+        <p class="lead ph-desc">前端程式碼、元件開發進度、技術選型筆記</p>
+
+        <div style="text-align:center; padding: 80px 0;">
+          <div style="font-size: 48px; margin-bottom: 24px; opacity: 0.3;">🚧</div>
+          <p style="font-size: 18px; color: var(--t4); margin-bottom: 8px;">此分頁內容正在建置中</p>
+          <p style="font-size: 14px; color: var(--t5);">隨著專案推進，相關內容會逐步填入</p>
+        </div>
+      </div>
+
+    </article><!-- /.content -->
+
+    <!-- ─ TOC ───────────────────────────────────── -->
+    <aside class="toc" id="toc-panel">
+      <div class="toc-head">本頁目錄</div>
+      <!-- filled by JS -->
+    </aside>
+
+  </div><!-- /.main -->
+</div><!-- /.layout -->
+</div><!-- /.app-shell -->
+
+<script>
+  let currentPage = 'r-overview';
+  let currentSystem = 'resident';
+  let tocObserver = null;
+
+  /* ══ TOC：從當前頁面的 h2 動態生成目錄 + scroll spy ══ */
+  function renderToc(pageId) {
+    const panel = document.getElementById('toc-panel');
+    const page = document.getElementById(pageId);
+    if (!page || !panel) { if (panel) panel.innerHTML = ''; return; }
+
+    // 找到當前頁面裡所有 h2，動態給它們加上 id
+    const headings = page.querySelectorAll('h2');
+    if (headings.length === 0) { panel.innerHTML = ''; return; }
+
+    headings.forEach((h, i) => {
+      if (!h.id) h.id = pageId + '-h2-' + i;
+    });
+
+    // 渲染 TOC 連結
+    panel.innerHTML = '<div class="toc-head">本頁目錄</div>' +
+      Array.from(headings).map((h, i) =>
+        `<a class="toc-link${i === 0 ? ' active' : ''}" href="#${h.id}" onclick="smoothScrollTo(event,'${h.id}')">${h.textContent}</a>`
+      ).join('');
+
+    // 啟動 IntersectionObserver 追蹤滾動位置
+    setupScrollSpy(headings);
+  }
+
+  /* 點擊 TOC 連結時平滑捲動到標題 */
+  function smoothScrollTo(e, id) {
+    e.preventDefault();
+    const el = document.getElementById(id);
+    if (el) {
+      const navH = parseInt(getComputedStyle(document.documentElement).getPropertyValue('--nav-h')) || 100;
+      const top = el.getBoundingClientRect().top + window.scrollY - navH - 20;
+      window.scrollTo({ top, behavior: 'smooth' });
+    }
+  }
+
+  /* Scroll Spy：偵測哪個 h2 進入視窗頂部區域，即時更新 TOC active */
+  function setupScrollSpy(headings) {
+    if (tocObserver) tocObserver.disconnect();
+
+    const tocLinks = document.querySelectorAll('#toc-panel .toc-link');
+    if (tocLinks.length === 0) return;
+
+    const navH = parseInt(getComputedStyle(document.documentElement).getPropertyValue('--nav-h')) || 100;
+
+    tocObserver = new IntersectionObserver((entries) => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting) {
+          const id = entry.target.id;
+          tocLinks.forEach(link => {
+            link.classList.toggle('active', link.getAttribute('href') === '#' + id);
+          });
+        }
+      });
+    }, {
+      rootMargin: `-${navH + 20}px 0px -55% 0px`,
+      threshold: 0
+    });
+
+    headings.forEach(h => tocObserver.observe(h));
+  }
+
+  /* ══ Page navigation ══ */
+  function goto(pageId) {
+    // hide all, remove animation class
+    document.querySelectorAll('.page').forEach(p => {
+      p.classList.remove('visible');
+      p.style.animation = 'none';
+    });
+
+    // show target with re-triggered animation
+    const target = document.getElementById(pageId);
+    if (target) {
+      // force reflow to reset animation
+      void target.offsetWidth;
+      target.style.animation = '';
+      target.classList.add('visible');
+
+      // 把 tabs-bar 移到這個 page 的 .lead 後面
+      const tabsBar = document.getElementById('tabs-bar');
+      const lead = target.querySelector('.lead');
+      if (tabsBar && lead) {
+        lead.after(tabsBar);
+      } else if (tabsBar && target) {
+        // 沒有 .lead 的頁面（如 tokens），插在第一個 h2 前面
+        const firstH2 = target.querySelector('h2');
+        if (firstH2) firstH2.before(tabsBar);
+        else target.prepend(tabsBar);
+      }
+      // 切頁時重置為「設計規格」tab active，並重新定位底線
+      switchTab('design', true);
+      requestAnimationFrame(() => moveTabIndicator(false));
+    }
+    currentPage = pageId;
+
+    // update sidebar active
+    const sys = pageId.startsWith('d-') ? 'developer' : 'resident';
+    const sbId = `sb-${sys}`;
+    document.querySelectorAll(`#${sbId} .sb-link`).forEach(l => {
+      l.classList.toggle('active', l.getAttribute('href') === '#' + pageId);
+    });
+
+    renderToc(pageId);
+
+    // scroll to top instantly
+    window.scrollTo(0, 0);
+
+    // 手機版：選完頁面自動關閉抽屜
+    closeMobileMenu();
+  }
+
+  function nav(e, pageId) {
+    // e 可能是 element（舊呼叫）或 event
+    // 阻止 <a href="#xxx"> 的原生 anchor 跳轉，這是造成切頁時 scroll 偏移的主因
+    if (e && e.preventDefault) e.preventDefault();
+    if (event) event.preventDefault();
+    goto(pageId);
+    return false;
+  }
+
+  /* ══ System switcher (住戶端 / 建商端) ══ */
+  function switchSystem(sys) {
+    currentSystem = sys;
+    document.body.className = sys;
+
+    // toggle system tabs
+    document.querySelectorAll('.sys-tab').forEach(t => {
+      t.classList.toggle('active', t.classList.contains(sys));
+    });
+
+    // toggle sidebars
+    document.getElementById('sb-resident').style.display  = sys === 'resident'  ? '' : 'none';
+    document.getElementById('sb-developer').style.display = sys === 'developer' ? '' : 'none';
+
+    // reset sidebar active to first item of that system
+    const firstPage = sys === 'resident' ? 'r-overview' : 'd-overview';
+    document.querySelectorAll(`#sb-${sys} .sb-link`).forEach(l => l.classList.remove('active'));
+    const first = document.querySelector(`#sb-${sys} .sb-link`);
+    if (first) first.classList.add('active');
+
+    goto(firstPage);
+  }
+
+  /* ══ Tabs bar switcher + 滑動底線動畫 ══ */
+  let currentTab = 'design';
+
+  function moveTabIndicator(animate) {
+    const bar = document.getElementById('tabs-bar');
+    const indicator = document.getElementById('tabs-indicator');
+    const activeBtn = bar && bar.querySelector('.tabs-link.active');
+    if (!bar || !indicator || !activeBtn) return;
+
+    const barRect = bar.getBoundingClientRect();
+    const btnRect = activeBtn.getBoundingClientRect();
+
+    // 底線位置：按鈕相對於 tabs-bar 的偏移，左右各縮 16px
+    const left = btnRect.left - barRect.left + 16;
+    const width = btnRect.width - 32;
+
+    if (!animate) {
+      // 初始化時不要動畫
+      indicator.style.transition = 'none';
+    } else {
+      // 使用 CSS 定義的 spring transition（移除 inline override，讓 stylesheet 生效）
+      indicator.style.transition = '';
+    }
+    indicator.style.left = left + 'px';
+    indicator.style.width = width + 'px';
+  }
+
+  function switchTab(tab, silent) {
+    currentTab = tab;
+    document.querySelectorAll('.tabs-link').forEach(t => {
+      t.classList.toggle('active', t.dataset.tab === tab);
+    });
+    // 滑動底線到新的 active tab
+    moveTabIndicator(true);
+    if (silent) return;
+  }
+
+  /* ══ 手機版選單開關（iOS Claude App 風格：主內容往右推）══ */
+  function toggleMobileMenu() {
+    const shell = document.getElementById('app-shell');
+    const overlay = document.getElementById('sidebar-overlay');
+    const btn = document.getElementById('menu-btn');
+    const isOpen = shell.classList.contains('menu-open');
+
+    if (isOpen) {
+      shell.classList.remove('menu-open');
+      overlay.classList.remove('show');
+      btn.textContent = '☰';
+      document.body.style.overflow = '';  // 恢復滾動
+    } else {
+      shell.classList.add('menu-open');
+      overlay.classList.add('show');
+      btn.textContent = '✕';
+      document.body.style.overflow = 'hidden';  // 防止背景滾動
+    }
+  }
+
+  /* 點擊 sidebar 連結後自動關閉手機選單 */
+  function closeMobileMenu() {
+    const shell = document.getElementById('app-shell');
+    const overlay = document.getElementById('sidebar-overlay');
+    const btn = document.getElementById('menu-btn');
+    if (shell && shell.classList.contains('menu-open')) {
+      shell.classList.remove('menu-open');
+      overlay.classList.remove('show');
+      btn.textContent = '☰';
+      document.body.style.overflow = '';
+    }
+  }
+
+  /* ══ Theme toggle ══ */
+  function toggleTheme() {
+    const html = document.documentElement;
+    const btn  = document.getElementById('theme-btn');
+    if (html.getAttribute('data-theme') === 'light') {
+      html.setAttribute('data-theme', 'dark');
+      btn.textContent = '🌙';
+    } else {
+      html.setAttribute('data-theme', 'light');
+      btn.textContent = '☀️';
+    }
+  }
+
+  /* init */
+  // 初始化：把 tabs-bar 移到第一個頁面的 .lead 後面
+  (function initTabs() {
+    const firstPage = document.getElementById('r-overview');
+    const tabsBar = document.getElementById('tabs-bar');
+    const lead = firstPage && firstPage.querySelector('.lead');
+    if (tabsBar && lead) lead.after(tabsBar);
+    // 初始化底線位置（無動畫）
+    requestAnimationFrame(() => moveTabIndicator(false));
+  })();
+
+  renderToc('r-overview');
+</script>
+</body>
+</html>

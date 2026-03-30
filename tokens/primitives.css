@@ -1,0 +1,81 @@
+/* =============================================
+   齊家厝 · Primitive Color Tokens
+   Layer 1 — No semantic meaning
+   Generated 2026.03
+   6 Palettes: ink / sand / gold / amber / orange / red
+============================================= */
+
+:root {
+
+  /* INK */
+  --color-ink-100: #f4f1e7;
+  --color-ink-200: #e9e5db;
+  --color-ink-300: #d9d5cb;
+  --color-ink-400: #c2beb4;
+  --color-ink-500: #a29d93;
+  --color-ink-600: #807a70;
+  --color-ink-700: #635c52;
+  --color-ink-800: #474036;
+  --color-ink-900: #2e271d;
+  --color-ink-1000: #1a1208;
+
+  /* SAND */
+  --color-sand-100: #fffbee;
+  --color-sand-200: #f8f2e3;
+  --color-sand-300: #eee6d4;
+  --color-sand-400: #e0d4bd;
+  --color-sand-500: #c4b090;
+  --color-sand-600: #a29075;
+  --color-sand-700: #80715a;
+  --color-sand-800: #615441;
+  --color-sand-900: #443a2a;
+  --color-sand-1000: #2b2216;
+
+  /* GOLD */
+  --color-gold-100: #faf5e7;
+  --color-gold-200: #f5eeda;
+  --color-gold-300: #eee3c7;
+  --color-gold-400: #e5d4ac;
+  --color-gold-500: #c8a75d;
+  --color-gold-600: #a98c4e;
+  --color-gold-700: #89713e;
+  --color-gold-800: #6a572f;
+  --color-gold-900: #4b3c20;
+  --color-gold-1000: #2f2412;
+
+  /* AMBER */
+  --color-amber-100: #fdf6e2;
+  --color-amber-200: #fdefcc;
+  --color-amber-300: #fee6ad;
+  --color-amber-400: #fed982;
+  --color-amber-500: #ffb200;
+  --color-amber-600: #d69501;
+  --color-amber-700: #ad7803;
+  --color-amber-800: #835c04;
+  --color-amber-900: #5a3f06;
+  --color-amber-1000: #352507;
+
+  /* ORANGE */
+  --color-orange-100: #fdf3e2;
+  --color-orange-200: #fde8cc;
+  --color-orange-300: #fed8ad;
+  --color-orange-400: #fec282;
+  --color-orange-500: #ff8000;
+  --color-orange-600: #d66c01;
+  --color-orange-700: #ad5803;
+  --color-orange-800: #834504;
+  --color-orange-900: #5a3106;
+  --color-orange-1000: #351f07;
+
+  /* RED */
+  --color-red-100: #faefe3;
+  --color-red-200: #f6ddd0;
+  --color-red-300: #efc5b4;
+  --color-red-400: #e6a28e;
+  --color-red-500: #cb3b1b;
+  --color-red-600: #ab3418;
+  --color-red-700: #8b2c14;
+  --color-red-800: #6b2511;
+  --color-red-900: #4c1d0d;
+  --color-red-1000: #2f170a;
+}

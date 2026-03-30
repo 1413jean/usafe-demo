@@ -1,0 +1,11 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "landing",
+      "runtimeExecutable": "npx",
+      "runtimeArgs": ["serve", "/Users/clark/Documents/Claude/Projects/齊家厝", "-l", "8080", "--no-clipboard"],
+      "port": 8080
+    }
+  ]
+}

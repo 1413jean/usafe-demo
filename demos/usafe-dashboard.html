@@ -1,0 +1,1202 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>首頁 — 齊家厝 U-SAFE Cloud</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🏠</text></svg>" />
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+TC:wght@400;600;700;900&family=Noto+Sans+TC:wght@300;400;500;600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet" />
+<style>
+/* ── Reset ── */
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth;-webkit-font-smoothing:antialiased}
+body{font-family:var(--font-sans);background:var(--bg);color:var(--text);line-height:1.7;font-size:16px;overflow-x:hidden}
+
+/* ── Tokens ── */
+:root{
+  --font-serif:"Noto Serif TC",serif;
+  --font-sans:"Noto Sans TC","Inter",sans-serif;
+  --gold:#C8A75D;
+  --gold-bright:#FFB200;
+  --gold-dim:rgba(200,167,93,0.12);
+  --brick:#CB3B1B;
+  --brick-h:#AB3418;
+  --teal:#2AA39F;
+  --teal-dim:rgba(42,163,159,0.12);
+  --sky:#4A90D9;
+  --ink:#1A1208;
+  --icon-design:#f24822;
+  --cta:#C8A75D;
+  --cta-h:#A98C4E;
+  --cta-shadow:rgba(200,167,93,0.35);
+  --bg:#FFFFFF;
+  --bg-alt:#F5F5F5;
+  --bg-card:#FFFFFF;
+  --text:#1A1208;
+  --text-2:rgba(26,18,8,0.55);
+  --text-3:rgba(26,18,8,0.38);
+  --border:rgba(26,18,8,0.08);
+  --border-default:#E6E6E6;
+  --spring:cubic-bezier(0.34,1.3,0.64,1);
+  --sidebar-w:220px;
+  --nav-dark:rgba(28,26,23,0.82);
+}
+
+/* ── Animations ── */
+@keyframes fadeUp{
+  from{opacity:0;transform:translateY(24px) scale(0.97);filter:blur(4px)}
+  to{opacity:1;transform:translateY(0) scale(1);filter:blur(0)}
+}
+@keyframes slideInLeft{
+  from{opacity:0;transform:translateX(-16px)}
+  to{opacity:1;transform:translateX(0)}
+}
+
+.reveal{opacity:0;transform:translateY(24px) scale(0.97);filter:blur(4px);transition:opacity 0.6s var(--spring),transform 0.6s var(--spring),filter 0.5s ease-out}
+.reveal.in{opacity:1;transform:translateY(0) scale(1);filter:blur(0)}
+.reveal.in .stagger-1{transition-delay:0.06s}
+.reveal.in .stagger-2{transition-delay:0.12s}
+.reveal.in .stagger-3{transition-delay:0.18s}
+.reveal.in .stagger-4{transition-delay:0.24s}
+.reveal.in .stagger-5{transition-delay:0.30s}
+.reveal.in .stagger-6{transition-delay:0.36s}
+.reveal.in .stagger-7{transition-delay:0.42s}
+
+/* ── Layout ── */
+.app{display:flex;min-height:100vh}
+
+/* ── Sidebar (Desktop) ── */
+.sidebar{
+  position:fixed;top:0;left:0;bottom:0;
+  width:var(--sidebar-w);
+  background:var(--bg);
+  border-right:1px solid var(--border-default);
+  display:flex;flex-direction:column;
+  z-index:50;
+  animation:slideInLeft 0.6s var(--spring) both;
+}
+.sidebar-logo{
+  padding:24px 24px 20px;
+  border-bottom:1px solid var(--border-default);
+}
+.sidebar-logo-text{
+  font-family:var(--font-serif);font-size:15px;font-weight:700;
+  color:var(--ink);letter-spacing:0.02em;
+}
+.sidebar-logo-sub{
+  font-size:11px;color:var(--text-3);font-weight:500;letter-spacing:0.5px;
+}
+
+.sidebar-nav{flex:1;padding:16px 12px;overflow-y:auto}
+.sidebar-nav a{
+  display:flex;align-items:center;
+  padding:12px 16px;border-radius:10px;
+  text-decoration:none;color:var(--text-2);
+  font-size:15px;font-weight:500;
+  transition:all 0.2s ease;
+  position:relative;margin-bottom:2px;
+}
+.sidebar-nav a:hover{background:var(--bg-alt);color:var(--text)}
+.sidebar-nav a.active{
+  background:var(--gold-dim);color:var(--ink);font-weight:600;
+}
+.sidebar-nav a.active::before{
+  content:'';position:absolute;left:0;top:8px;bottom:8px;width:3px;
+  background:var(--gold);border-radius:0 3px 3px 0;
+}
+.nav-badge{
+  margin-left:auto;
+  background:var(--brick);color:#fff;
+  font-size:11px;font-weight:700;
+  padding:1px 7px;border-radius:10px;
+  line-height:1.5;
+}
+
+.sidebar-footer{
+  padding:16px;border-top:1px solid var(--border-default);
+}
+.sidebar-user{
+  display:flex;align-items:center;gap:10px;
+  padding:10px 12px;border-radius:10px;
+  background:var(--bg-alt);margin-bottom:12px;
+}
+.sidebar-avatar{
+  width:36px;height:36px;border-radius:50%;
+  background:var(--gold-dim);
+  display:flex;align-items:center;justify-content:center;
+  font-size:14px;font-weight:700;color:var(--gold);
+  font-family:var(--font-serif);flex-shrink:0;
+}
+.sidebar-user-info{min-width:0}
+.sidebar-user-name{font-size:14px;font-weight:600;color:var(--text)}
+.sidebar-user-email{font-size:11px;color:var(--text-3);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.sidebar-links{display:flex;gap:8px}
+.sidebar-links a{
+  font-size:13px;color:var(--text-3);text-decoration:none;
+  padding:6px 10px;border-radius:8px;
+  transition:all 0.2s;
+}
+.sidebar-links a:hover{color:var(--text);background:var(--bg-alt)}
+
+/* ── Main Content ── */
+.main{
+  flex:1;margin-left:var(--sidebar-w);
+  padding:0 0 60px;
+  min-width:0;
+}
+
+/* ── Hero Carousel — fill width ── */
+.hero-carousel{
+  position:relative;
+  width:100%;
+  padding:40px 40px 0;
+  margin-bottom:40px;
+}
+.hero-viewport{
+  position:relative;
+  width:100%;
+  border-radius:20px;
+  overflow:hidden;
+}
+.hero-track{
+  display:flex;
+  transition:transform 0.5s cubic-bezier(0.4,0,0.2,1);
+}
+.hero-slide{
+  position:relative;
+  min-width:100%;height:520px;
+  overflow:hidden;
+  flex-shrink:0;
+}
+.hero-slide img{
+  width:100%;height:100%;object-fit:cover;
+  display:block;
+}
+.hero-slide-overlay{
+  position:absolute;inset:0;
+  background:linear-gradient(0deg,rgba(0,0,0,0.7) 0%,rgba(0,0,0,0.2) 40%,transparent 70%);
+}
+.hero-slide-content{
+  position:absolute;bottom:0;left:0;right:0;
+  padding:32px 36px;
+  display:flex;flex-direction:column;gap:8px;
+}
+.hero-slide-badge{
+  display:inline-flex;align-self:flex-start;
+  background:var(--gold-bright);color:var(--ink);
+  font-size:12px;font-weight:700;
+  padding:4px 12px;border-radius:6px;
+  letter-spacing:0.02em;
+}
+.hero-slide-title{
+  font-family:var(--font-serif);
+  font-size:clamp(22px,3vw,32px);
+  font-weight:700;color:#fff;line-height:1.3;
+}
+.hero-slide-meta{
+  display:flex;gap:20px;
+  font-size:15px;color:rgba(255,255,255,0.85);
+  flex-wrap:wrap;
+}
+.hero-slide-meta strong{color:var(--gold-bright);font-weight:600}
+.hero-slide-status{
+  display:inline-flex;align-items:center;gap:6px;
+  font-size:13px;font-weight:600;color:#fff;
+}
+.hero-slide-status .dot{
+  width:8px;height:8px;border-radius:50%;
+  display:inline-block;
+}
+.dot-active{background:#34D399}
+.dot-done{background:var(--gold-bright)}
+
+/* Page control dots — centered below carousel */
+.hero-dots{
+  display:flex;justify-content:center;gap:8px;
+  padding:16px 0 0;
+}
+.hero-dot{
+  width:8px;height:8px;border-radius:50%;
+  background:var(--border-default);
+  cursor:pointer;
+  transition:all 0.3s ease;
+  border:none;padding:0;
+}
+.hero-dot.active{
+  background:var(--gold);
+  width:24px;border-radius:4px;
+}
+
+/* ── Content padding wrapper ── */
+.content-pad{
+  padding:0 40px;
+}
+
+/* ── Welcome line ── */
+.welcome-line{
+  font-family:var(--font-serif);
+  font-size:clamp(20px,2.5vw,24px);
+  font-weight:700;color:var(--ink);
+  margin-bottom:20px;line-height:1.4;
+}
+
+/* ── Case Status Pill ── */
+.case-pill{
+  display:flex;align-items:center;gap:16px;
+  background:var(--bg-card);
+  border:1px solid var(--border-default);
+  border-left:4px solid var(--gold-bright);
+  border-radius:12px;
+  padding:16px 20px;
+  margin-bottom:36px;
+  box-shadow:0 1px 4px rgba(0,0,0,0.04);
+  transition:box-shadow 0.3s ease;
+}
+.case-pill:hover{box-shadow:0 4px 16px rgba(0,0,0,0.08)}
+.case-pill-step{
+  background:var(--teal-dim);color:var(--teal);
+  font-size:14px;font-weight:600;
+  padding:6px 14px;border-radius:8px;
+  white-space:nowrap;
+}
+.case-pill-text{
+  font-size:16px;color:var(--text);flex:1;
+}
+.case-pill-text strong{font-weight:600}
+.case-pill-link{
+  color:var(--gold);font-size:15px;font-weight:600;
+  text-decoration:none;white-space:nowrap;
+  transition:color 0.2s;
+}
+.case-pill-link:hover{color:var(--cta-h)}
+
+/* ── Section Header ── */
+.section-header{
+  display:flex;align-items:baseline;justify-content:space-between;
+  margin-bottom:16px;
+}
+.section-title{
+  font-family:var(--font-serif);
+  font-size:clamp(18px,2.2vw,22px);
+  font-weight:700;color:var(--ink);
+}
+.section-more{
+  color:var(--text-3);font-size:14px;font-weight:500;
+  text-decoration:none;transition:color 0.2s;
+}
+.section-more:hover{color:var(--text)}
+
+/* ── Horizontal Scroll Container ── */
+.h-scroll{
+  display:flex;gap:16px;
+  overflow-x:auto;overflow-y:visible;
+  scroll-snap-type:x mandatory;
+  -webkit-overflow-scrolling:touch;
+  padding-bottom:8px;
+  margin-bottom:40px;
+  scrollbar-width:none;
+}
+.h-scroll::-webkit-scrollbar{display:none}
+.h-scroll > *{scroll-snap-align:start;flex-shrink:0}
+
+/* ── Builder Cards (Section 1) ── */
+.builder-card{
+  width:280px;height:380px;
+  border-radius:16px;
+  position:relative;overflow:hidden;
+  cursor:pointer;
+  transition:transform 0.35s var(--spring),box-shadow 0.35s ease;
+}
+.builder-card:hover{
+  transform:scale(1.02);
+  box-shadow:0 12px 40px rgba(0,0,0,0.18);
+}
+.builder-card img{
+  width:100%;height:100%;object-fit:cover;
+  display:block;
+  transition:transform 0.5s ease;
+}
+.builder-card:hover img{transform:scale(1.04)}
+.builder-overlay{
+  position:absolute;bottom:0;left:0;right:0;
+  background:linear-gradient(0deg,rgba(0,0,0,0.75) 0%,rgba(0,0,0,0.35) 50%,transparent 100%);
+  padding:24px 20px 20px;
+  display:flex;flex-direction:column;gap:6px;
+}
+.builder-badge{
+  position:absolute;top:16px;left:16px;
+  background:var(--gold-bright);color:var(--ink);
+  font-size:12px;font-weight:700;
+  padding:4px 10px;border-radius:6px;
+  letter-spacing:0.02em;
+}
+.builder-name{
+  font-family:var(--font-serif);
+  font-size:20px;font-weight:700;color:#fff;
+  line-height:1.3;
+}
+.builder-meta{
+  display:flex;align-items:center;gap:12px;
+  font-size:14px;color:rgba(255,255,255,0.85);
+}
+.builder-rating{color:var(--gold-bright);font-weight:600}
+
+/* ── Case Cards (Section 2) ── */
+.case-card{
+  width:300px;
+  border-radius:16px;
+  overflow:hidden;
+  background:var(--bg-card);
+  border:1px solid var(--border-default);
+  cursor:pointer;
+  transition:transform 0.35s var(--spring),box-shadow 0.35s ease;
+}
+.case-card:hover{
+  transform:scale(1.02);
+  box-shadow:0 8px 32px rgba(0,0,0,0.12);
+}
+.case-card-img{
+  width:100%;height:200px;object-fit:cover;
+  display:block;
+  transition:transform 0.5s ease;
+}
+.case-card:hover .case-card-img{transform:scale(1.04)}
+.case-card-img-wrap{overflow:hidden;position:relative}
+.case-card-body{padding:18px 20px 20px}
+.case-card-title{
+  font-family:var(--font-serif);
+  font-size:17px;font-weight:700;color:var(--ink);
+  margin-bottom:8px;line-height:1.4;
+}
+.case-card-builder{
+  font-size:13px;color:var(--text-3);font-weight:500;
+  margin-bottom:10px;
+}
+.case-card-stats{
+  display:flex;gap:16px;font-size:14px;
+}
+.case-card-stat{color:var(--text-2)}
+.case-card-stat strong{color:var(--teal);font-weight:600}
+.case-card-value{color:var(--brick);font-weight:700}
+
+/* ── Nearby Cases (Section 3) ── */
+.nearby-grid{
+  display:grid;grid-template-columns:1fr 1fr;gap:16px;
+  margin-bottom:40px;
+}
+.nearby-card{
+  background:var(--bg-card);
+  border:1px solid var(--border-default);
+  border-radius:12px;
+  padding:20px;
+  cursor:pointer;
+  transition:transform 0.3s var(--spring),box-shadow 0.3s ease;
+}
+.nearby-card:hover{
+  transform:scale(1.02);
+  box-shadow:0 6px 20px rgba(0,0,0,0.08);
+}
+.nearby-top{
+  display:flex;align-items:center;gap:8px;
+  margin-bottom:10px;
+}
+.nearby-pin{
+  width:20px;height:20px;
+  display:flex;align-items:center;justify-content:center;
+}
+.nearby-pin svg{width:16px;height:16px;fill:var(--brick)}
+.nearby-district{font-size:15px;font-weight:600;color:var(--ink)}
+.nearby-title{
+  font-size:16px;font-weight:500;color:var(--text);
+  margin-bottom:10px;line-height:1.5;
+}
+.nearby-tags{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.tag{
+  font-size:12px;font-weight:600;
+  padding:3px 10px;border-radius:6px;
+  white-space:nowrap;
+}
+.tag-active{background:var(--teal-dim);color:var(--teal)}
+.tag-done{background:var(--gold-dim);color:var(--gold)}
+.tag-recruit{background:rgba(203,59,27,0.1);color:var(--brick)}
+.nearby-households{
+  font-size:13px;color:var(--text-3);font-weight:500;
+}
+
+/* ── Hot Areas (Section 4) ── */
+.pills-row{
+  display:flex;gap:10px;flex-wrap:wrap;
+  margin-bottom:40px;
+}
+.area-pill{
+  display:inline-flex;align-items:center;gap:6px;
+  padding:10px 18px;
+  border-radius:100px;
+  border:1px solid var(--border-default);
+  background:var(--bg-card);
+  font-size:15px;font-weight:500;
+  color:var(--text);
+  cursor:pointer;
+  transition:all 0.25s var(--spring);
+  text-decoration:none;
+}
+.area-pill:hover{
+  background:var(--gold-dim);border-color:var(--gold);
+  transform:scale(1.04);
+}
+.area-pill .pill-count{
+  font-size:12px;font-weight:700;
+  color:var(--text-3);
+}
+
+/* ── Knowledge Cards (Section 5) ── */
+.knowledge-grid{
+  display:grid;grid-template-columns:repeat(3,1fr);gap:16px;
+  margin-bottom:40px;
+}
+.knowledge-card{
+  background:var(--bg-card);
+  border:1px solid var(--border-default);
+  border-radius:12px;
+  overflow:hidden;
+  cursor:pointer;
+  transition:transform 0.3s var(--spring),box-shadow 0.3s ease;
+  text-decoration:none;color:inherit;
+}
+.knowledge-card:hover{
+  transform:scale(1.02);
+  box-shadow:0 6px 20px rgba(0,0,0,0.08);
+}
+.knowledge-cover{
+  height:140px;
+  display:flex;align-items:center;justify-content:center;
+  font-size:48px;
+  position:relative;
+}
+.knowledge-cover-1{background:linear-gradient(135deg,#FFF7E0,#FFE8B0)}
+.knowledge-cover-2{background:linear-gradient(135deg,#E8F5F4,#C4EAE8)}
+.knowledge-cover-3{background:linear-gradient(135deg,#EBF0FA,#D0DEF5)}
+.knowledge-body{padding:18px 20px 20px}
+.knowledge-label{
+  font-size:12px;color:var(--teal);font-weight:600;
+  margin-bottom:6px;letter-spacing:0.03em;
+}
+.knowledge-title{
+  font-family:var(--font-serif);
+  font-size:17px;font-weight:700;color:var(--ink);
+  line-height:1.5;
+}
+
+/* ── Mobile Top Bar — Dark + Blur ── */
+.mobile-top{
+  display:none;
+  position:fixed;top:0;left:0;right:0;
+  height:56px;
+  background:var(--nav-dark);
+  backdrop-filter:blur(24px) saturate(1.6);
+  -webkit-backdrop-filter:blur(24px) saturate(1.6);
+  border-bottom:1px solid rgba(255,255,255,0.08);
+  z-index:60;
+  padding:0 16px;
+  align-items:center;justify-content:space-between;
+}
+.mobile-top-brand{
+  font-family:var(--font-serif);font-size:15px;font-weight:700;color:#fff;
+}
+.mobile-top-avatar{
+  width:32px;height:32px;border-radius:50%;
+  background:rgba(200,167,93,0.2);
+  display:flex;align-items:center;justify-content:center;
+  font-size:12px;font-weight:700;color:var(--gold);
+  font-family:var(--font-serif);
+}
+
+/* ── Hamburger Button ── */
+.hamburger{
+  width:36px;height:36px;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;gap:5px;
+  background:none;border:none;cursor:pointer;padding:0;
+  -webkit-tap-highlight-color:transparent;
+}
+.hamburger span{
+  display:block;width:20px;height:2px;
+  background:#fff;border-radius:2px;
+  transition:all 0.3s ease;
+}
+
+/* ── Mobile Fullscreen Menu ── */
+.mobile-menu{
+  position:fixed;inset:0;
+  background:var(--nav-dark);
+  backdrop-filter:blur(32px) saturate(1.8);
+  -webkit-backdrop-filter:blur(32px) saturate(1.8);
+  z-index:200;
+  display:flex;flex-direction:column;
+  padding:0;
+  opacity:0;pointer-events:none;
+  transition:opacity 0.35s ease;
+}
+.mobile-menu.open{opacity:1;pointer-events:auto}
+.mobile-menu-header{
+  display:flex;align-items:center;justify-content:space-between;
+  padding:0 16px;height:56px;flex-shrink:0;
+  border-bottom:1px solid rgba(255,255,255,0.08);
+}
+.mobile-menu-brand{
+  font-family:var(--font-serif);font-size:15px;font-weight:700;color:#fff;
+}
+.mobile-menu-close{
+  width:36px;height:36px;
+  display:flex;align-items:center;justify-content:center;
+  background:none;border:none;cursor:pointer;
+  color:rgba(255,255,255,0.6);font-size:24px;
+  transition:color 0.2s;
+}
+.mobile-menu-close:hover{color:#fff}
+.mobile-menu-nav{
+  flex:1;display:flex;flex-direction:column;
+  padding:24px 20px;gap:4px;
+}
+.mobile-menu-nav a{
+  display:flex;align-items:center;justify-content:space-between;
+  padding:16px 16px;border-radius:12px;
+  text-decoration:none;
+  color:rgba(255,255,255,0.6);
+  font-size:18px;font-weight:500;
+  transition:all 0.2s ease;
+}
+.mobile-menu-nav a:hover,
+.mobile-menu-nav a.active{
+  background:rgba(255,255,255,0.08);
+  color:#fff;
+}
+.mobile-menu-nav a.active{
+  color:var(--gold);font-weight:600;
+}
+.mobile-menu-footer{
+  padding:20px;border-top:1px solid rgba(255,255,255,0.08);
+}
+.mobile-menu-user{
+  display:flex;align-items:center;gap:12px;
+  margin-bottom:16px;
+}
+.mobile-menu-user-avatar{
+  width:40px;height:40px;border-radius:50%;
+  background:rgba(200,167,93,0.2);
+  display:flex;align-items:center;justify-content:center;
+  font-size:16px;font-weight:700;color:var(--gold);
+  font-family:var(--font-serif);
+}
+.mobile-menu-user-name{font-size:16px;font-weight:600;color:#fff}
+.mobile-menu-user-email{font-size:13px;color:rgba(255,255,255,0.4)}
+.mobile-menu-actions{display:flex;gap:12px}
+.mobile-menu-actions a{
+  font-size:14px;color:rgba(255,255,255,0.4);text-decoration:none;
+  padding:8px 14px;border-radius:8px;border:1px solid rgba(255,255,255,0.1);
+  transition:all 0.2s;
+}
+.mobile-menu-actions a:hover{color:#fff;border-color:rgba(255,255,255,0.3)}
+
+/* ── Responsive ── */
+@media(max-width:1024px){
+  .content-pad{padding:0 24px}
+  .builder-card{width:260px;height:340px}
+  .case-card{width:270px}
+  .knowledge-grid{grid-template-columns:1fr 1fr}
+  .hero-carousel{padding:24px 24px 0}
+  .hero-slide{height:460px}
+  .hero-slide-content{padding:28px 24px}
+}
+
+@media(max-width:768px){
+  .sidebar{display:none}
+  .mobile-top{display:flex}
+  .main{margin-left:0;padding:56px 0 24px}
+  .content-pad{padding:0 16px}
+  .builder-card{width:240px;height:320px}
+  .case-card{width:250px}
+  .nearby-grid{grid-template-columns:1fr}
+  .knowledge-grid{grid-template-columns:1fr}
+  .case-pill{flex-direction:column;align-items:flex-start;gap:10px}
+  .welcome-line{font-size:20px}
+  .hero-carousel{padding:16px 16px 0;margin-bottom:28px}
+  .hero-viewport{border-radius:16px}
+  .hero-slide{height:360px}
+  .hero-slide-content{padding:20px 16px}
+  .hero-slide-title{font-size:20px}
+  .hero-slide-meta{font-size:13px;gap:12px}
+}
+
+@media(max-width:480px){
+  .builder-card{width:220px;height:300px}
+  .case-card{width:230px}
+  .hero-slide{height:280px}
+}
+</style>
+</head>
+<body>
+
+<!-- ═══════ SIDEBAR ═══════ -->
+<aside class="sidebar">
+  <div class="sidebar-logo">
+    <div class="sidebar-logo-text">齊家厝</div>
+    <div class="sidebar-logo-sub">U-SAFE Cloud</div>
+  </div>
+
+  <nav class="sidebar-nav">
+    <a href="#" class="active" data-page="home">首頁</a>
+    <a href="#" data-page="progress">進度追蹤</a>
+    <a href="#" data-page="documents">文件中心</a>
+    <a href="#" data-page="notifications">通知<span class="nav-badge">3</span></a>
+    <a href="#" data-page="profile">我的資料</a>
+  </nav>
+
+  <div class="sidebar-footer">
+    <div class="sidebar-user">
+      <div class="sidebar-avatar">陳</div>
+      <div class="sidebar-user-info">
+        <div class="sidebar-user-name">陳太太</div>
+        <div class="sidebar-user-email">demo@usafe.tw</div>
+      </div>
+    </div>
+    <div class="sidebar-links">
+      <a href="usafe-landing-v2.0.html">回首頁</a>
+      <a href="#" onclick="window.location.href='usafe-landing-v2.0.html';return false;">登出</a>
+    </div>
+  </div>
+</aside>
+
+<!-- ═══════ MOBILE TOP BAR ═══════ -->
+<div class="mobile-top">
+  <div class="mobile-top-brand">齊家厝</div>
+  <button class="hamburger" id="menuOpen" aria-label="選單">
+    <span></span><span></span><span></span>
+  </button>
+</div>
+
+<!-- ═══════ MOBILE FULLSCREEN MENU ═══════ -->
+<div class="mobile-menu" id="mobileMenu">
+  <div class="mobile-menu-header">
+    <div class="mobile-menu-brand">齊家厝</div>
+    <button class="mobile-menu-close" id="menuClose" aria-label="關閉">&times;</button>
+  </div>
+  <nav class="mobile-menu-nav">
+    <a href="#" class="active">首頁</a>
+    <a href="#">進度追蹤</a>
+    <a href="#">文件中心</a>
+    <a href="#">通知 <span class="nav-badge">3</span></a>
+    <a href="#">我的資料</a>
+  </nav>
+  <div class="mobile-menu-footer">
+    <div class="mobile-menu-user">
+      <div class="mobile-menu-user-avatar">陳</div>
+      <div>
+        <div class="mobile-menu-user-name">陳太太</div>
+        <div class="mobile-menu-user-email">demo@usafe.tw</div>
+      </div>
+    </div>
+    <div class="mobile-menu-actions">
+      <a href="usafe-landing-v2.0.html">回首頁</a>
+      <a href="#" onclick="window.location.href='usafe-landing-v2.0.html';return false;">登出</a>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════ MAIN CONTENT ═══════ -->
+<div class="app">
+  <main class="main">
+
+    <!-- ═══════ Hero Carousel ═══════ -->
+    <div class="hero-carousel reveal" id="heroCarousel">
+      <div class="hero-viewport">
+      <div class="hero-track" id="heroTrack">
+
+        <div class="hero-slide">
+          <img src="../assets/images/new-highrise-1.png" alt="遠雄建設 — 大安區都更案" loading="eager" />
+          <div class="hero-slide-overlay"></div>
+          <div class="hero-slide-content">
+            <span class="hero-slide-badge">精選建商</span>
+            <div class="hero-slide-title">遠雄建設 — 大安區復興段都更案</div>
+            <div class="hero-slide-meta">
+              <span class="hero-slide-status"><span class="dot dot-active"></span> 施工中</span>
+              <span>預計 2027 Q2 完工</span>
+              <span>成功案例 <strong>28 件</strong></span>
+            </div>
+          </div>
+        </div>
+
+        <div class="hero-slide">
+          <img src="../assets/images/new-highrise-2.png" alt="國泰建設 — 信義區都更案" loading="lazy" />
+          <div class="hero-slide-overlay"></div>
+          <div class="hero-slide-content">
+            <span class="hero-slide-badge">精選建商</span>
+            <div class="hero-slide-title">國泰建設 — 信義區永吉段改建案</div>
+            <div class="hero-slide-meta">
+              <span class="hero-slide-status"><span class="dot dot-done"></span> 已完工</span>
+              <span>2年8個月完成</span>
+              <span>成功案例 <strong>35 件</strong></span>
+            </div>
+          </div>
+        </div>
+
+        <div class="hero-slide">
+          <img src="../assets/images/new-highrise-3.png" alt="潤泰創新 — 中山區重建案" loading="lazy" />
+          <div class="hero-slide-overlay"></div>
+          <div class="hero-slide-content">
+            <div class="hero-slide-title">潤泰創新 — 中山區南京段危老重建</div>
+            <div class="hero-slide-meta">
+              <span class="hero-slide-status"><span class="dot dot-active"></span> 審議中</span>
+              <span>預計 2027 Q4 動工</span>
+              <span>成功案例 <strong>22 件</strong></span>
+            </div>
+          </div>
+        </div>
+
+        <div class="hero-slide">
+          <img src="../assets/images/construction-hero.png" alt="富邦建設 — 松山區整合案" loading="lazy" />
+          <div class="hero-slide-overlay"></div>
+          <div class="hero-slide-content">
+            <span class="hero-slide-badge">精選建商</span>
+            <div class="hero-slide-title">富邦建設 — 松山區民生段整合案</div>
+            <div class="hero-slide-meta">
+              <span class="hero-slide-status"><span class="dot dot-active"></span> 整合中</span>
+              <span>已達 85% 同意比</span>
+              <span>成功案例 <strong>19 件</strong></span>
+            </div>
+          </div>
+        </div>
+
+        <div class="hero-slide">
+          <img src="../assets/images/construction-1.png" alt="興富發建設 — 萬華區危老案" loading="lazy" />
+          <div class="hero-slide-overlay"></div>
+          <div class="hero-slide-content">
+            <div class="hero-slide-title">興富發建設 — 萬華區西園段危老重建</div>
+            <div class="hero-slide-meta">
+              <span class="hero-slide-status"><span class="dot dot-done"></span> 已完工</span>
+              <span>1年10個月完成</span>
+              <span>成功案例 <strong>41 件</strong></span>
+            </div>
+          </div>
+        </div>
+
+      </div>
+      </div><!-- /hero-viewport -->
+
+      <div class="hero-dots" id="heroDots"></div>
+    </div>
+
+    <!-- Welcome -->
+    <div class="content-pad">
+      <div class="welcome-line reveal">早安，陳太太</div>
+
+      <!-- Case Status Pill -->
+      <div class="case-pill reveal">
+        <div class="case-pill-step">第 4 階段</div>
+        <div class="case-pill-text">您的案件正在「<strong>政府審議</strong>」階段，預計 2026 Q3 完成</div>
+        <a href="#" class="case-pill-link">查看詳情 &rarr;</a>
+      </div>
+    </div>
+
+    <!-- ═══════ Section 1: 為您推薦的建商 ═══════ -->
+    <section class="content-pad reveal">
+      <div class="section-header">
+        <h2 class="section-title">為您推薦的建商</h2>
+        <a href="#" class="section-more">查看全部</a>
+      </div>
+      <div class="h-scroll" id="builderScroll">
+
+        <div class="builder-card">
+          <div class="builder-badge">精選建商</div>
+          <img src="../assets/images/new-highrise-1.png" alt="遠雄建設" loading="lazy" />
+          <div class="builder-overlay">
+            <div class="builder-name">遠雄建設</div>
+            <div class="builder-meta">
+              <span>已完成 28 件都更案</span>
+              <span class="builder-rating">&#9733; 4.8</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="builder-card">
+          <div class="builder-badge">精選建商</div>
+          <img src="../assets/images/new-highrise-2.png" alt="國泰建設" loading="lazy" />
+          <div class="builder-overlay">
+            <div class="builder-name">國泰建設</div>
+            <div class="builder-meta">
+              <span>已完成 35 件都更案</span>
+              <span class="builder-rating">&#9733; 4.9</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="builder-card">
+          <img src="../assets/images/new-highrise-3.png" alt="潤泰創新" loading="lazy" />
+          <div class="builder-overlay">
+            <div class="builder-name">潤泰創新</div>
+            <div class="builder-meta">
+              <span>已完成 22 件都更案</span>
+              <span class="builder-rating">&#9733; 4.7</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="builder-card">
+          <div class="builder-badge">精選建商</div>
+          <img src="../assets/images/construction-hero.png" alt="富邦建設" loading="lazy" />
+          <div class="builder-overlay">
+            <div class="builder-name">富邦建設</div>
+            <div class="builder-meta">
+              <span>已完成 19 件都更案</span>
+              <span class="builder-rating">&#9733; 4.6</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="builder-card">
+          <img src="../assets/images/construction-1.png" alt="興富發建設" loading="lazy" />
+          <div class="builder-overlay">
+            <div class="builder-name">興富發建設</div>
+            <div class="builder-meta">
+              <span>已完成 41 件都更案</span>
+              <span class="builder-rating">&#9733; 4.5</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="builder-card">
+          <img src="../assets/images/construction-2.png" alt="華固建設" loading="lazy" />
+          <div class="builder-overlay">
+            <div class="builder-name">華固建設</div>
+            <div class="builder-meta">
+              <span>已完成 15 件都更案</span>
+              <span class="builder-rating">&#9733; 4.7</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="builder-card">
+          <img src="../assets/images/construction-3.png" alt="長虹建設" loading="lazy" />
+          <div class="builder-overlay">
+            <div class="builder-name">長虹建設</div>
+            <div class="builder-meta">
+              <span>已完成 12 件都更案</span>
+              <span class="builder-rating">&#9733; 4.4</span>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </section>
+
+    <!-- ═══════ Section 2: 成功案例精選 ═══════ -->
+    <section class="content-pad reveal">
+      <div class="section-header">
+        <h2 class="section-title">成功案例精選</h2>
+        <a href="#" class="section-more">查看全部</a>
+      </div>
+      <div class="h-scroll" id="caseScroll">
+
+        <a href="usafe-story.html" class="case-card" style="text-decoration:none;color:inherit">
+          <div class="case-card-img-wrap">
+            <img class="case-card-img" src="../assets/images/new-highrise-1.png" alt="大安區陳宅" loading="lazy" />
+          </div>
+          <div class="case-card-body">
+            <div class="case-card-title">大安區陳宅 — 42年老屋重生</div>
+            <div class="case-card-builder">遠雄建設</div>
+            <div class="case-card-stats">
+              <span class="case-card-stat">2年6個月完成</span>
+              <span class="case-card-stat"><strong>+180%</strong> 價值提升</span>
+            </div>
+          </div>
+        </a>
+
+        <a href="usafe-story.html" class="case-card" style="text-decoration:none;color:inherit">
+          <div class="case-card-img-wrap">
+            <img class="case-card-img" src="../assets/images/new-highrise-2.png" alt="信義區林宅" loading="lazy" />
+          </div>
+          <div class="case-card-body">
+            <div class="case-card-title">信義區林宅 — 35年公寓翻新</div>
+            <div class="case-card-builder">國泰建設</div>
+            <div class="case-card-stats">
+              <span class="case-card-stat">3年1個月完成</span>
+              <span class="case-card-stat"><strong>+220%</strong> 價值提升</span>
+            </div>
+          </div>
+        </a>
+
+        <a href="usafe-story.html" class="case-card" style="text-decoration:none;color:inherit">
+          <div class="case-card-img-wrap">
+            <img class="case-card-img" src="../assets/images/new-highrise-3.png" alt="中山區王宅" loading="lazy" />
+          </div>
+          <div class="case-card-body">
+            <div class="case-card-title">中山區王宅 — 50年透天重建</div>
+            <div class="case-card-builder">潤泰創新</div>
+            <div class="case-card-stats">
+              <span class="case-card-stat">2年9個月完成</span>
+              <span class="case-card-stat"><strong>+155%</strong> 價值提升</span>
+            </div>
+          </div>
+        </a>
+
+        <a href="usafe-story.html" class="case-card" style="text-decoration:none;color:inherit">
+          <div class="case-card-img-wrap">
+            <img class="case-card-img" src="../assets/images/construction-4.png" alt="松山區張宅" loading="lazy" />
+          </div>
+          <div class="case-card-body">
+            <div class="case-card-title">松山區張宅 — 38年華廈蛻變</div>
+            <div class="case-card-builder">富邦建設</div>
+            <div class="case-card-stats">
+              <span class="case-card-stat">2年2個月完成</span>
+              <span class="case-card-stat"><strong>+195%</strong> 價值提升</span>
+            </div>
+          </div>
+        </a>
+
+        <a href="usafe-story.html" class="case-card" style="text-decoration:none;color:inherit">
+          <div class="case-card-img-wrap">
+            <img class="case-card-img" src="../assets/images/construction-5.png" alt="萬華區李宅" loading="lazy" />
+          </div>
+          <div class="case-card-body">
+            <div class="case-card-title">萬華區李宅 — 45年危老重建</div>
+            <div class="case-card-builder">興富發建設</div>
+            <div class="case-card-stats">
+              <span class="case-card-stat">1年10個月完成</span>
+              <span class="case-card-stat"><strong>+240%</strong> 價值提升</span>
+            </div>
+          </div>
+        </a>
+
+      </div>
+    </section>
+
+    <!-- ═══════ Section 3: 您附近的都更案件 ═══════ -->
+    <section class="content-pad reveal">
+      <div class="section-header">
+        <h2 class="section-title">您附近的都更案件</h2>
+        <a href="#" class="section-more">地圖檢視</a>
+      </div>
+      <div class="nearby-grid">
+
+        <div class="nearby-card">
+          <div class="nearby-top">
+            <div class="nearby-pin"><svg viewBox="0 0 24 24"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5a2.5 2.5 0 010-5 2.5 2.5 0 010 5z"/></svg></div>
+            <div class="nearby-district">大安區</div>
+          </div>
+          <div class="nearby-title">復興南路一段整合案 — 12戶聯合都更</div>
+          <div class="nearby-tags">
+            <span class="tag tag-active">進行中</span>
+            <span class="nearby-households">12 戶</span>
+          </div>
+        </div>
+
+        <div class="nearby-card">
+          <div class="nearby-top">
+            <div class="nearby-pin"><svg viewBox="0 0 24 24"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5a2.5 2.5 0 010-5 2.5 2.5 0 010 5z"/></svg></div>
+            <div class="nearby-district">信義區</div>
+          </div>
+          <div class="nearby-title">永吉路 30 巷老公寓更新案</div>
+          <div class="nearby-tags">
+            <span class="tag tag-recruit">招募中</span>
+            <span class="nearby-households">8 戶</span>
+          </div>
+        </div>
+
+        <div class="nearby-card">
+          <div class="nearby-top">
+            <div class="nearby-pin"><svg viewBox="0 0 24 24"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5a2.5 2.5 0 010-5 2.5 2.5 0 010 5z"/></svg></div>
+            <div class="nearby-district">中山區</div>
+          </div>
+          <div class="nearby-title">南京東路三段危老重建案</div>
+          <div class="nearby-tags">
+            <span class="tag tag-done">已完成</span>
+            <span class="nearby-households">20 戶</span>
+          </div>
+        </div>
+
+        <div class="nearby-card">
+          <div class="nearby-top">
+            <div class="nearby-pin"><svg viewBox="0 0 24 24"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5a2.5 2.5 0 010-5 2.5 2.5 0 010 5z"/></svg></div>
+            <div class="nearby-district">松山區</div>
+          </div>
+          <div class="nearby-title">民生東路五段社區整合案</div>
+          <div class="nearby-tags">
+            <span class="tag tag-active">進行中</span>
+            <span class="nearby-households">16 戶</span>
+          </div>
+        </div>
+
+      </div>
+    </section>
+
+    <!-- ═══════ Section 4: 熱門都更區域 ═══════ -->
+    <section class="content-pad reveal">
+      <div class="section-header">
+        <h2 class="section-title">熱門都更區域</h2>
+      </div>
+      <div class="pills-row">
+        <a href="#" class="area-pill">大安區 <span class="pill-count">32</span></a>
+        <a href="#" class="area-pill">信義區 <span class="pill-count">28</span></a>
+        <a href="#" class="area-pill">中山區 <span class="pill-count">24</span></a>
+        <a href="#" class="area-pill">松山區 <span class="pill-count">19</span></a>
+        <a href="#" class="area-pill">內湖區 <span class="pill-count">15</span></a>
+        <a href="#" class="area-pill">萬華區 <span class="pill-count">21</span></a>
+        <a href="#" class="area-pill">中正區 <span class="pill-count">17</span></a>
+      </div>
+    </section>
+
+    <!-- ═══════ Section 5: 都更知識 ═══════ -->
+    <section class="content-pad reveal">
+      <div class="section-header">
+        <h2 class="section-title">都更知識</h2>
+        <a href="#" class="section-more">更多文章</a>
+      </div>
+      <div class="knowledge-grid">
+
+        <a href="#" class="knowledge-card">
+          <div class="knowledge-cover knowledge-cover-1">
+            <svg width="56" height="56" viewBox="0 0 56 56" fill="none"><rect x="8" y="20" width="18" height="28" rx="2" fill="#C8A75D" opacity="0.3"/><rect x="30" y="8" width="18" height="40" rx="2" fill="#C8A75D" opacity="0.5"/><path d="M14 28h6M14 34h6M36 16h6M36 22h6M36 28h6M36 34h6" stroke="#C8A75D" stroke-width="2" stroke-linecap="round"/></svg>
+          </div>
+          <div class="knowledge-body">
+            <div class="knowledge-label">基礎觀念</div>
+            <div class="knowledge-title">都更 vs 危老重建，差在哪？</div>
+          </div>
+        </a>
+
+        <a href="#" class="knowledge-card">
+          <div class="knowledge-cover knowledge-cover-2">
+            <svg width="56" height="56" viewBox="0 0 56 56" fill="none"><circle cx="28" cy="28" r="20" fill="#2AA39F" opacity="0.15"/><path d="M20 28l6 6 10-12" stroke="#2AA39F" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          </div>
+          <div class="knowledge-body">
+            <div class="knowledge-label">選商指南</div>
+            <div class="knowledge-title">建商怎麼選？5 個關鍵指標</div>
+          </div>
+        </a>
+
+        <a href="#" class="knowledge-card">
+          <div class="knowledge-cover knowledge-cover-3">
+            <svg width="56" height="56" viewBox="0 0 56 56" fill="none"><rect x="10" y="14" width="36" height="28" rx="3" fill="#4A90D9" opacity="0.15"/><path d="M18 24h20M18 30h14M18 36h8" stroke="#4A90D9" stroke-width="2" stroke-linecap="round"/><circle cx="42" cy="18" r="6" fill="#4A90D9" opacity="0.25"/><path d="M40 18l2 2 3-3" stroke="#4A90D9" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          </div>
+          <div class="knowledge-body">
+            <div class="knowledge-label">流程全解</div>
+            <div class="knowledge-title">都更流程全解析：從評估到入住</div>
+          </div>
+        </a>
+
+      </div>
+    </section>
+
+  </main>
+</div>
+
+<script>
+// ── IntersectionObserver for staggered reveal ──
+const revealObserver = new IntersectionObserver((entries) => {
+  entries.forEach(entry => {
+    if (entry.isIntersecting) {
+      entry.target.classList.add('in');
+      revealObserver.unobserve(entry.target);
+    }
+  });
+}, { threshold: 0.1, rootMargin: '0px 0px -40px 0px' });
+
+document.querySelectorAll('.reveal').forEach(el => revealObserver.observe(el));
+
+// ── Sidebar nav active state ──
+document.querySelectorAll('.sidebar-nav a').forEach(link => {
+  link.addEventListener('click', e => {
+    e.preventDefault();
+    document.querySelectorAll('.sidebar-nav a').forEach(l => l.classList.remove('active'));
+    link.classList.add('active');
+  });
+});
+
+// ── Mobile Menu ──
+const mobileMenu = document.getElementById('mobileMenu');
+document.getElementById('menuOpen').addEventListener('click', () => mobileMenu.classList.add('open'));
+document.getElementById('menuClose').addEventListener('click', () => mobileMenu.classList.remove('open'));
+document.querySelectorAll('.mobile-menu-nav a').forEach(link => {
+  link.addEventListener('click', e => {
+    e.preventDefault();
+    document.querySelectorAll('.mobile-menu-nav a').forEach(l => l.classList.remove('active'));
+    link.classList.add('active');
+    mobileMenu.classList.remove('open');
+  });
+});
+
+// ── Hero Carousel ──
+(function(){
+  const carousel = document.getElementById('heroCarousel');
+  const track = document.getElementById('heroTrack');
+  const total = track.children.length;
+  const dotsContainer = document.getElementById('heroDots');
+  let current = 0;
+  let autoTimer;
+
+  // Build dots
+  for(let i = 0; i < total; i++){
+    const dot = document.createElement('button');
+    dot.className = 'hero-dot' + (i === 0 ? ' active' : '');
+    dot.setAttribute('aria-label', '第 ' + (i+1) + ' 張');
+    dot.addEventListener('click', () => goTo(i));
+    dotsContainer.appendChild(dot);
+  }
+  const dots = dotsContainer.children;
+
+  function goTo(index){
+    current = ((index % total) + total) % total;
+    track.style.transform = 'translateX(-' + (current * 100) + '%)';
+    for(let i = 0; i < dots.length; i++){
+      dots[i].classList.toggle('active', i === current);
+    }
+    resetAuto();
+  }
+
+  function next(){ goTo(current + 1) }
+  function prev(){ goTo(current - 1) }
+
+  function resetAuto(){
+    clearInterval(autoTimer);
+    autoTimer = setInterval(next, 4000);
+  }
+  resetAuto();
+
+  // Touch swipe
+  let touchStartX = 0;
+  let touchDelta = 0;
+  carousel.addEventListener('touchstart', e => { touchStartX = e.touches[0].clientX; }, {passive:true});
+  carousel.addEventListener('touchmove', e => { touchDelta = e.touches[0].clientX - touchStartX; }, {passive:true});
+  carousel.addEventListener('touchend', () => {
+    if(Math.abs(touchDelta) > 50){ touchDelta < 0 ? next() : prev(); }
+    touchDelta = 0;
+  });
+
+  // Mouse drag (desktop)
+  let mouseDown = false, mouseStartX = 0, mouseDelta = 0;
+  const viewport = carousel.querySelector('.hero-viewport');
+  viewport.style.cursor = 'grab';
+  viewport.addEventListener('mousedown', e => {
+    mouseDown = true; mouseStartX = e.clientX; mouseDelta = 0;
+    viewport.style.cursor = 'grabbing';
+    track.style.transition = 'none';
+    e.preventDefault();
+  });
+  window.addEventListener('mousemove', e => {
+    if(!mouseDown) return;
+    mouseDelta = e.clientX - mouseStartX;
+    const base = -(current * 100);
+    const pct = (mouseDelta / viewport.offsetWidth) * 100;
+    track.style.transform = 'translateX(' + (base + pct) + '%)';
+  });
+  window.addEventListener('mouseup', () => {
+    if(!mouseDown) return;
+    mouseDown = false;
+    viewport.style.cursor = 'grab';
+    track.style.transition = '';
+    if(Math.abs(mouseDelta) > 50){ mouseDelta < 0 ? next() : prev(); }
+    else { goTo(current); }
+    mouseDelta = 0;
+  });
+})();
+</script>
+</body>
+</html>

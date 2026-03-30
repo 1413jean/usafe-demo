@@ -1,0 +1,1063 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>齊家厝 U-SAFE — 留下根，延續脈</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+TC:wght@400;600;700;900&family=Noto+Sans+TC:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+  <style>
+    /* ══════════════════════════════════════════
+       齊家厝 U-SAFE Landing Page v1.0
+       品牌色以 Figma 為準
+       ══════════════════════════════════════════ */
+    :root {
+      /* Brand */
+      --gold:       #FFB200;
+      --gold-light: #FFC940;
+      --gold-dim:   rgba(255,178,0,0.12);
+      --brick:      #CB3B1B;
+      --brick-hover:#B5331A;
+      --brick-dim:  rgba(203,59,27,0.08);
+      --teal:       #2AA39F;
+      --sky:        #4A90D9;
+      --ink:        #1A1208;
+      --parchment:  #F8F5EA;
+      --white:      #FFFFFF;
+
+      /* Semantic */
+      --bg:         #F8F5EA;
+      --bg-card:    #FFFFFF;
+      --bg-dark:    #2C2C2C;
+      --text:       #1A1208;
+      --text-sec:   rgba(26,18,8,0.65);
+      --text-muted: rgba(26,18,8,0.45);
+      --border:     rgba(26,18,8,0.10);
+
+      /* Layout */
+      --max-w: 1200px;
+      --nav-h: 72px;
+
+      /* Spring easing */
+      --spring: cubic-bezier(0.22, 1, 0.36, 1);
+    }
+
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    html {
+      scroll-behavior: smooth;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    body {
+      font-family: 'Noto Sans TC', -apple-system, BlinkMacSystemFont, sans-serif;
+      color: var(--text);
+      background: var(--bg);
+      line-height: 1.7;
+      font-size: 16px;
+    }
+
+    .serif { font-family: 'Noto Serif TC', serif; }
+
+    /* ── NAV ── */
+    .nav {
+      position: fixed; top: 0; left: 0; right: 0;
+      height: var(--nav-h);
+      background: rgba(248,245,234,0.85);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      border-bottom: 1px solid var(--border);
+      z-index: 100;
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 0 clamp(20px, 5vw, 48px);
+    }
+    .nav-brand {
+      display: flex; align-items: center; gap: 12px;
+      text-decoration: none; color: var(--text);
+    }
+    .nav-logo {
+      width: 40px; height: 40px;
+      background: var(--gold);
+      border-radius: 10px;
+      display: flex; align-items: center; justify-content: center;
+      font-weight: 900; color: var(--white); font-size: 18px;
+    }
+    .nav-name {
+      font-family: 'Noto Serif TC', serif;
+      font-size: 20px; font-weight: 700;
+      letter-spacing: 0.02em;
+    }
+    .nav-links { display: flex; align-items: center; gap: 32px; }
+    .nav-link {
+      text-decoration: none; color: var(--text-sec);
+      font-size: 15px; font-weight: 500;
+      transition: color 0.2s;
+    }
+    .nav-link:hover { color: var(--text); }
+    .nav-cta {
+      display: inline-flex; align-items: center; gap: 6px;
+      padding: 10px 24px;
+      background: var(--brick);
+      color: var(--white);
+      border: none; border-radius: 8px;
+      font-size: 15px; font-weight: 600;
+      cursor: pointer; text-decoration: none;
+      transition: all 0.3s var(--spring);
+    }
+    .nav-cta:hover { background: var(--brick-hover); transform: translateY(-1px); }
+
+    /* Mobile menu */
+    .nav-toggle {
+      display: none; background: none; border: none;
+      font-size: 24px; cursor: pointer; color: var(--text);
+    }
+
+    /* ── HERO ── */
+    .hero {
+      padding: calc(var(--nav-h) + 80px) clamp(20px, 5vw, 48px) 80px;
+      text-align: center;
+      max-width: var(--max-w);
+      margin: 0 auto;
+    }
+    .hero-badge {
+      display: inline-flex; align-items: center; gap: 8px;
+      padding: 8px 20px;
+      background: var(--gold-dim);
+      border: 1px solid rgba(255,178,0,0.25);
+      border-radius: 100px;
+      font-size: 14px; font-weight: 500;
+      color: #9A7400;
+      margin-bottom: 32px;
+    }
+    .hero-badge-dot {
+      width: 8px; height: 8px;
+      background: var(--gold);
+      border-radius: 50%;
+    }
+    .hero h1 {
+      font-family: 'Noto Serif TC', serif;
+      font-size: clamp(36px, 6vw, 64px);
+      font-weight: 900;
+      line-height: 1.25;
+      letter-spacing: -0.01em;
+      margin-bottom: 24px;
+      color: var(--text);
+    }
+    .hero h1 em {
+      font-style: normal;
+      background: linear-gradient(135deg, var(--gold) 0%, #E6A000 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+    .hero-sub {
+      font-size: clamp(17px, 2.2vw, 20px);
+      color: var(--text-sec);
+      max-width: 640px;
+      margin: 0 auto 48px;
+      line-height: 1.8;
+    }
+    .hero-actions {
+      display: flex; gap: 16px;
+      justify-content: center;
+      flex-wrap: wrap;
+    }
+    .btn-primary {
+      display: inline-flex; align-items: center; gap: 8px;
+      padding: 16px 36px;
+      background: var(--brick);
+      color: var(--white);
+      border: none; border-radius: 12px;
+      font-size: 17px; font-weight: 600;
+      cursor: pointer; text-decoration: none;
+      transition: all 0.3s var(--spring);
+      box-shadow: 0 4px 16px rgba(203,59,27,0.25);
+    }
+    .btn-primary:hover {
+      background: var(--brick-hover);
+      transform: translateY(-2px);
+      box-shadow: 0 8px 24px rgba(203,59,27,0.30);
+    }
+    .btn-secondary {
+      display: inline-flex; align-items: center; gap: 8px;
+      padding: 16px 36px;
+      background: var(--white);
+      color: var(--text);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      font-size: 17px; font-weight: 500;
+      cursor: pointer; text-decoration: none;
+      transition: all 0.3s var(--spring);
+    }
+    .btn-secondary:hover {
+      border-color: var(--gold);
+      transform: translateY(-2px);
+      box-shadow: 0 4px 16px rgba(0,0,0,0.06);
+    }
+
+    /* Stats row */
+    .hero-stats {
+      display: flex; justify-content: center; gap: 48px;
+      margin-top: 64px;
+      padding-top: 48px;
+      border-top: 1px solid var(--border);
+    }
+    .hero-stat-num {
+      font-family: 'Noto Serif TC', serif;
+      font-size: 36px; font-weight: 900;
+      color: var(--gold);
+    }
+    .hero-stat-label {
+      font-size: 14px; color: var(--text-muted);
+      margin-top: 4px;
+    }
+
+    /* ── SECTION COMMON ── */
+    section {
+      padding: 96px clamp(20px, 5vw, 48px);
+    }
+    .section-inner {
+      max-width: var(--max-w);
+      margin: 0 auto;
+    }
+    .section-label {
+      display: inline-block;
+      font-size: 13px; font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: var(--teal);
+      margin-bottom: 12px;
+    }
+    .section-title {
+      font-family: 'Noto Serif TC', serif;
+      font-size: clamp(28px, 4vw, 40px);
+      font-weight: 700;
+      line-height: 1.3;
+      margin-bottom: 16px;
+    }
+    .section-desc {
+      font-size: 17px;
+      color: var(--text-sec);
+      max-width: 600px;
+      line-height: 1.8;
+      margin-bottom: 48px;
+    }
+
+    /* ── TRUST BADGES ── */
+    .trust { background: var(--white); }
+    .trust-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+      gap: 24px;
+    }
+    .trust-card {
+      padding: 32px;
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      transition: all 0.3s var(--spring);
+    }
+    .trust-card:hover {
+      border-color: var(--gold);
+      box-shadow: 0 8px 32px rgba(255,178,0,0.08);
+      transform: translateY(-4px);
+    }
+    .trust-icon {
+      width: 48px; height: 48px;
+      border-radius: 12px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 24px;
+      margin-bottom: 20px;
+    }
+    .trust-icon.gold { background: var(--gold-dim); }
+    .trust-icon.brick { background: var(--brick-dim); }
+    .trust-icon.teal { background: rgba(42,163,159,0.10); }
+    .trust-icon.sky { background: rgba(74,144,217,0.10); }
+    .trust-card h3 {
+      font-size: 18px; font-weight: 700;
+      margin-bottom: 8px;
+    }
+    .trust-card p {
+      font-size: 15px; color: var(--text-sec);
+      line-height: 1.7;
+    }
+
+    /* ── PROCESS ── */
+    .process { background: var(--bg); }
+    .process-steps {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+      gap: 32px;
+      counter-reset: step;
+    }
+    .process-step {
+      position: relative;
+      padding: 36px 28px;
+      background: var(--white);
+      border-radius: 16px;
+      border: 1px solid var(--border);
+      counter-increment: step;
+      transition: all 0.3s var(--spring);
+    }
+    .process-step:hover {
+      transform: translateY(-4px);
+      box-shadow: 0 8px 32px rgba(0,0,0,0.06);
+    }
+    .process-step::before {
+      content: counter(step);
+      position: absolute; top: -16px; left: 28px;
+      width: 32px; height: 32px;
+      background: var(--gold);
+      color: var(--white);
+      border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 14px; font-weight: 700;
+    }
+    .step-icon { font-size: 32px; margin-bottom: 16px; }
+    .process-step h3 {
+      font-size: 18px; font-weight: 700;
+      margin-bottom: 8px;
+    }
+    .process-step p {
+      font-size: 15px; color: var(--text-sec);
+      line-height: 1.7;
+    }
+
+    /* ── CASES ── */
+    .cases { background: var(--white); }
+    .cases-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+      gap: 28px;
+    }
+    .case-card {
+      border-radius: 16px;
+      overflow: hidden;
+      border: 1px solid var(--border);
+      transition: all 0.3s var(--spring);
+    }
+    .case-card:hover {
+      transform: translateY(-4px);
+      box-shadow: 0 12px 40px rgba(0,0,0,0.08);
+    }
+    .case-img {
+      height: 200px;
+      background: linear-gradient(135deg, var(--bg-dark) 0%, #3a3a3a 100%);
+      display: flex; align-items: center; justify-content: center;
+      color: rgba(255,255,255,0.3);
+      font-size: 48px;
+      position: relative;
+    }
+    .case-tag {
+      position: absolute; top: 16px; left: 16px;
+      padding: 4px 12px;
+      background: var(--gold);
+      color: var(--white);
+      border-radius: 6px;
+      font-size: 12px; font-weight: 600;
+    }
+    .case-body { padding: 24px; }
+    .case-body h3 {
+      font-size: 20px; font-weight: 700;
+      margin-bottom: 8px;
+    }
+    .case-body p {
+      font-size: 15px; color: var(--text-sec);
+      line-height: 1.7;
+      margin-bottom: 16px;
+    }
+    .case-stats {
+      display: flex; gap: 24px;
+      padding-top: 16px;
+      border-top: 1px solid var(--border);
+    }
+    .case-stat { text-align: center; }
+    .case-stat-val {
+      font-size: 20px; font-weight: 700;
+      color: var(--brick);
+    }
+    .case-stat-label {
+      font-size: 12px; color: var(--text-muted);
+    }
+
+    /* ── TEAM ── */
+    .team { background: var(--bg); }
+    .team-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 24px;
+    }
+    .team-card {
+      text-align: center;
+      padding: 32px 20px;
+      background: var(--white);
+      border-radius: 16px;
+      border: 1px solid var(--border);
+      transition: all 0.3s var(--spring);
+    }
+    .team-card:hover {
+      transform: translateY(-4px);
+      box-shadow: 0 8px 32px rgba(0,0,0,0.06);
+    }
+    .team-avatar {
+      width: 72px; height: 72px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, var(--gold-dim) 0%, rgba(42,163,159,0.1) 100%);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 28px;
+      margin: 0 auto 16px;
+    }
+    .team-card h3 {
+      font-size: 17px; font-weight: 700;
+      margin-bottom: 4px;
+    }
+    .team-card .role {
+      font-size: 13px; color: var(--teal);
+      font-weight: 500;
+      margin-bottom: 8px;
+    }
+    .team-card p {
+      font-size: 14px; color: var(--text-sec);
+      line-height: 1.6;
+    }
+
+    /* ── CTA SECTION ── */
+    .cta-section {
+      background: linear-gradient(135deg, var(--bg-dark) 0%, #1a1a1a 100%);
+      color: var(--white);
+      text-align: center;
+    }
+    .cta-section .section-label { color: var(--gold); }
+    .cta-section .section-title { color: var(--white); }
+    .cta-section .section-desc {
+      color: rgba(255,255,255,0.65);
+      margin: 0 auto 48px;
+    }
+
+    /* ── FORM ── */
+    .form-card {
+      max-width: 520px;
+      margin: 0 auto;
+      background: rgba(255,255,255,0.06);
+      border: 1px solid rgba(255,255,255,0.10);
+      border-radius: 20px;
+      padding: 40px;
+      backdrop-filter: blur(12px);
+    }
+    .form-row {
+      margin-bottom: 20px;
+      text-align: left;
+    }
+    .form-row label {
+      display: block;
+      font-size: 14px; font-weight: 500;
+      color: rgba(255,255,255,0.7);
+      margin-bottom: 8px;
+    }
+    .form-row input,
+    .form-row select,
+    .form-row textarea {
+      width: 100%;
+      padding: 14px 16px;
+      background: rgba(255,255,255,0.08);
+      border: 1px solid rgba(255,255,255,0.15);
+      border-radius: 10px;
+      color: var(--white);
+      font-size: 16px;
+      font-family: 'Noto Sans TC', sans-serif;
+      transition: border-color 0.2s;
+      outline: none;
+    }
+    .form-row input::placeholder,
+    .form-row textarea::placeholder {
+      color: rgba(255,255,255,0.35);
+    }
+    .form-row input:focus,
+    .form-row select:focus,
+    .form-row textarea:focus {
+      border-color: var(--gold);
+    }
+    .form-row select option {
+      background: var(--bg-dark);
+      color: var(--white);
+    }
+    .form-row textarea { resize: vertical; min-height: 100px; }
+    .form-submit {
+      width: 100%;
+      padding: 16px;
+      background: var(--brick);
+      color: var(--white);
+      border: none; border-radius: 12px;
+      font-size: 17px; font-weight: 600;
+      cursor: pointer;
+      transition: all 0.3s var(--spring);
+      font-family: 'Noto Sans TC', sans-serif;
+    }
+    .form-submit:hover {
+      background: var(--brick-hover);
+      transform: translateY(-1px);
+      box-shadow: 0 8px 24px rgba(203,59,27,0.3);
+    }
+    .form-note {
+      margin-top: 16px;
+      font-size: 13px;
+      color: rgba(255,255,255,0.4);
+    }
+
+    /* ── FOOTER ── */
+    .footer {
+      background: var(--bg-dark);
+      color: rgba(255,255,255,0.5);
+      padding: 48px clamp(20px, 5vw, 48px) 32px;
+      border-top: 1px solid rgba(255,255,255,0.08);
+    }
+    .footer-inner {
+      max-width: var(--max-w);
+      margin: 0 auto;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 16px;
+    }
+    .footer-brand {
+      font-family: 'Noto Serif TC', serif;
+      font-size: 16px; font-weight: 600;
+      color: rgba(255,255,255,0.7);
+    }
+    .footer-links { display: flex; gap: 24px; }
+    .footer-links a {
+      color: rgba(255,255,255,0.5);
+      text-decoration: none;
+      font-size: 14px;
+      transition: color 0.2s;
+    }
+    .footer-links a:hover { color: var(--gold); }
+
+    /* ── ANIMATIONS ── */
+    .fade-up {
+      opacity: 0;
+      transform: translateY(30px);
+      transition: opacity 0.7s var(--spring), transform 0.7s var(--spring);
+    }
+    .fade-up.visible {
+      opacity: 1;
+      transform: translateY(0);
+    }
+
+    /* ── RESPONSIVE ── */
+    @media (max-width: 768px) {
+      .nav-links { display: none; }
+      .nav-toggle { display: block; }
+      .nav-links.open {
+        display: flex;
+        flex-direction: column;
+        position: absolute;
+        top: var(--nav-h);
+        left: 0; right: 0;
+        background: var(--bg);
+        padding: 24px;
+        border-bottom: 1px solid var(--border);
+        gap: 16px;
+      }
+      .hero { padding-top: calc(var(--nav-h) + 48px); padding-bottom: 48px; }
+      .hero-stats { flex-direction: column; gap: 24px; align-items: center; }
+      section { padding: 64px clamp(20px, 5vw, 48px); }
+      .cases-grid { grid-template-columns: 1fr; }
+      .team-grid { grid-template-columns: repeat(2, 1fr); }
+      .form-card { padding: 28px 20px; }
+    }
+
+    @media (max-width: 480px) {
+      .team-grid { grid-template-columns: 1fr; }
+      .process-steps { grid-template-columns: 1fr; }
+    }
+
+    /* ── DIALOG (登入/註冊 Modal) ── */
+    .modal-overlay {
+      display: none;
+      position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+      background: rgba(0,0,0,0.5);
+      backdrop-filter: blur(4px);
+      z-index: 200;
+      align-items: center; justify-content: center;
+    }
+    .modal-overlay.show { display: flex; }
+    .modal {
+      background: var(--white);
+      border-radius: 20px;
+      padding: 48px 40px;
+      max-width: 420px;
+      width: 90%;
+      position: relative;
+    }
+    .modal-close {
+      position: absolute; top: 16px; right: 16px;
+      background: none; border: none;
+      font-size: 24px; cursor: pointer;
+      color: var(--text-muted);
+    }
+    .modal h2 {
+      font-family: 'Noto Serif TC', serif;
+      font-size: 24px; font-weight: 700;
+      margin-bottom: 8px;
+    }
+    .modal .modal-sub {
+      font-size: 15px; color: var(--text-sec);
+      margin-bottom: 28px;
+    }
+    .modal .form-row label { color: var(--text-sec); }
+    .modal .form-row input {
+      background: var(--bg);
+      border: 1px solid var(--border);
+      color: var(--text);
+    }
+    .modal .form-row input::placeholder { color: var(--text-muted); }
+    .modal .form-row input:focus { border-color: var(--gold); }
+    .modal-submit {
+      width: 100%;
+      padding: 14px;
+      background: var(--brick);
+      color: var(--white);
+      border: none; border-radius: 10px;
+      font-size: 16px; font-weight: 600;
+      cursor: pointer;
+      font-family: 'Noto Sans TC', sans-serif;
+      transition: background 0.2s;
+    }
+    .modal-submit:hover { background: var(--brick-hover); }
+    .modal-switch {
+      text-align: center;
+      margin-top: 20px;
+      font-size: 14px;
+      color: var(--text-sec);
+    }
+    .modal-switch a {
+      color: var(--brick);
+      text-decoration: none;
+      font-weight: 600;
+    }
+  </style>
+</head>
+<body>
+
+<!-- ═══ NAV ═══ -->
+<nav class="nav">
+  <a href="#" class="nav-brand">
+    <div class="nav-logo">厝</div>
+    <span class="nav-name">齊家厝</span>
+  </a>
+  <div class="nav-links" id="navLinks">
+    <a href="#trust" class="nav-link">為什麼選我們</a>
+    <a href="#process" class="nav-link">服務流程</a>
+    <a href="#cases" class="nav-link">成功案例</a>
+    <a href="#team" class="nav-link">專業團隊</a>
+    <button class="nav-cta" onclick="openModal('login')">登入</button>
+  </div>
+  <button class="nav-toggle" onclick="toggleNav()">☰</button>
+</nav>
+
+<!-- ═══ HERO ═══ -->
+<section class="hero">
+  <div class="hero-badge">
+    <span class="hero-badge-dot"></span>
+    台灣首創 AI 都更整合平台 · 專利認證
+  </div>
+  <h1 class="serif fade-up">
+    老屋不只是房子<br/>
+    是三代人的<em>家</em>
+  </h1>
+  <p class="hero-sub fade-up">
+    齊家厝 U-SAFE 用 AI 與專業團隊，幫您的老屋找到最適合的重建方案。<br/>
+    不再等 8 到 10 年，讓都更變得透明、安全、可預期。
+  </p>
+  <div class="hero-actions fade-up">
+    <a href="#contact" class="btn-primary">免費諮詢 →</a>
+    <a href="#process" class="btn-secondary">了解流程</a>
+  </div>
+  <div class="hero-stats fade-up">
+    <div>
+      <div class="hero-stat-num">150萬+</div>
+      <div class="hero-stat-label">雙北屋齡逾 30 年住宅</div>
+    </div>
+    <div>
+      <div class="hero-stat-num">&lt;10%</div>
+      <div class="hero-stat-label">傳統都更成功率</div>
+    </div>
+    <div>
+      <div class="hero-stat-num">6個月</div>
+      <div class="hero-stat-label">平台最快整合案例</div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══ TRUST ═══ -->
+<section class="trust" id="trust">
+  <div class="section-inner">
+    <span class="section-label">Trust & Safety</span>
+    <h2 class="section-title serif fade-up">為什麼 15 萬戶屋主信任我們？</h2>
+    <p class="section-desc fade-up">
+      齊家厝不是仲介，而是一個由建築師、結構技師、估價師、律師共同打造的整合平台。
+    </p>
+    <div class="trust-grid">
+      <div class="trust-card fade-up">
+        <div class="trust-icon gold">🏛️</div>
+        <h3>國家專利認證</h3>
+        <p>專利編號 114212560，台灣唯一以「城市整合」為核心的都更 AI 平台技術。</p>
+      </div>
+      <div class="trust-card fade-up">
+        <div class="trust-icon brick">🛡️</div>
+        <h3>全程透明公開</h3>
+        <p>從估價到簽約，每一步都有數據佐證，拒絕黑箱操作。所有流程即時可查。</p>
+      </div>
+      <div class="trust-card fade-up">
+        <div class="trust-icon teal">🤖</div>
+        <h3>AI 智能媒合</h3>
+        <p>根據您的房屋條件、地段和需求，AI 自動推薦最適合的建商與重建方案。</p>
+      </div>
+      <div class="trust-card fade-up">
+        <div class="trust-icon sky">⚖️</div>
+        <h3>專業法律保障</h3>
+        <p>每個案件都有律師全程把關，保障您的權益不受侵害。</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══ PROCESS ═══ -->
+<section class="process" id="process">
+  <div class="section-inner">
+    <span class="section-label">How It Works</span>
+    <h2 class="section-title serif fade-up">四步驟，讓老屋重獲新生</h2>
+    <p class="section-desc fade-up">
+      不需要懂法規、不需要自己找建商。齊家厝幫您處理所有複雜的事。
+    </p>
+    <div class="process-steps">
+      <div class="process-step fade-up">
+        <div class="step-icon">📋</div>
+        <h3>免費評估登記</h3>
+        <p>填寫基本房屋資訊，我們會在 48 小時內回覆初步評估結果與建議方案。</p>
+      </div>
+      <div class="process-step fade-up">
+        <div class="step-icon">🔍</div>
+        <h3>專業現場勘查</h3>
+        <p>結構技師到府檢測房屋安全等級，建築師評估改建可行性與價值提升空間。</p>
+      </div>
+      <div class="process-step fade-up">
+        <div class="step-icon">🤝</div>
+        <h3>AI 精準媒合</h3>
+        <p>根據您的房屋數據，AI 從合作建商中推薦最適合的 2-3 家，由您自主選擇。</p>
+      </div>
+      <div class="process-step fade-up">
+        <div class="step-icon">🏠</div>
+        <h3>全程專人陪伴</h3>
+        <p>從簽約到完工，專案管理團隊全程跟進，讓您安心等待新家完成。</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══ CASES ═══ -->
+<section class="cases" id="cases">
+  <div class="section-inner">
+    <span class="section-label">Success Stories</span>
+    <h2 class="section-title serif fade-up">他們已經住進新家了</h2>
+    <p class="section-desc fade-up">
+      每一個案例，都是一個家族的傳承故事。
+    </p>
+    <div class="cases-grid">
+      <div class="case-card fade-up">
+        <div class="case-img">
+          🏢
+          <span class="case-tag">真實案例</span>
+        </div>
+        <div class="case-body">
+          <h3>信義敦化案</h3>
+          <p>三棟四層老公寓成功整合，蛻變為地上 12 層豪華大樓。原住戶資產價值翻倍成長。</p>
+          <div class="case-stats">
+            <div class="case-stat">
+              <div class="case-stat-val">6 個月</div>
+              <div class="case-stat-label">整合時間</div>
+            </div>
+            <div class="case-stat">
+              <div class="case-stat-val">100%</div>
+              <div class="case-stat-label">簽約率</div>
+            </div>
+            <div class="case-stat">
+              <div class="case-stat-val">元捷建設</div>
+              <div class="case-stat-label">合作建商</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="case-card fade-up">
+        <div class="case-img">🏠</div>
+        <div class="case-body">
+          <h3>大安文青宅</h3>
+          <p>五層公寓社區，住戶平均年齡 62 歲。透過平台媒合潤泰創新，從評估到動工僅 14 個月。</p>
+          <div class="case-stats">
+            <div class="case-stat">
+              <div class="case-stat-val">14 個月</div>
+              <div class="case-stat-label">評估到動工</div>
+            </div>
+            <div class="case-stat">
+              <div class="case-stat-val">92%</div>
+              <div class="case-stat-label">住戶滿意度</div>
+            </div>
+            <div class="case-stat">
+              <div class="case-stat-val">潤泰創新</div>
+              <div class="case-stat-label">合作建商</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="case-card fade-up">
+        <div class="case-img">🌊</div>
+        <div class="case-body">
+          <h3>中山河岸美宅</h3>
+          <p>河岸第一排老公寓群，危險等級高達 78%。整合後成為景觀豪宅，住戶資產增值 3 倍。</p>
+          <div class="case-stats">
+            <div class="case-stat">
+              <div class="case-stat-val">10 個月</div>
+              <div class="case-stat-label">整合時間</div>
+            </div>
+            <div class="case-stat">
+              <div class="case-stat-val">3倍</div>
+              <div class="case-stat-label">資產增值</div>
+            </div>
+            <div class="case-stat">
+              <div class="case-stat-val">興富發建設</div>
+              <div class="case-stat-label">合作建商</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══ TEAM ═══ -->
+<section class="team" id="team">
+  <div class="section-inner">
+    <span class="section-label">Expert Team</span>
+    <h2 class="section-title serif fade-up">跨領域專業團隊</h2>
+    <p class="section-desc fade-up">
+      每一個環節都有該領域的頂尖專家把關，確保您的權益。
+    </p>
+    <div class="team-grid">
+      <div class="team-card fade-up">
+        <div class="team-avatar">🏗️</div>
+        <h3>李明遠</h3>
+        <div class="role">建築師</div>
+        <p>20 年都更經驗，主導超過 50 件改建案</p>
+      </div>
+      <div class="team-card fade-up">
+        <div class="team-avatar">🔬</div>
+        <h3>林朝清</h3>
+        <div class="role">結構技師</div>
+        <p>國家級耐震標章審查委員</p>
+      </div>
+      <div class="team-card fade-up">
+        <div class="team-avatar">📊</div>
+        <h3>鐘少佑</h3>
+        <div class="role">不動產估價師</div>
+        <p>精準評估資產價值與增值空間</p>
+      </div>
+      <div class="team-card fade-up">
+        <div class="team-avatar">⚙️</div>
+        <h3>王冠閔</h3>
+        <div class="role">PCM 工程師</div>
+        <p>全案工程管理與品質監控</p>
+      </div>
+      <div class="team-card fade-up">
+        <div class="team-avatar">🎓</div>
+        <h3>林宏澔</h3>
+        <div class="role">教授顧問</div>
+        <p>學術研究支撐，確保方案的科學依據</p>
+      </div>
+      <div class="team-card fade-up">
+        <div class="team-avatar">⚖️</div>
+        <h3>劉文瑞</h3>
+        <div class="role">律師</div>
+        <p>合約審查與住戶權益法律保障</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══ CTA + FORM ═══ -->
+<section class="cta-section" id="contact">
+  <div class="section-inner">
+    <span class="section-label">Free Consultation</span>
+    <h2 class="section-title serif fade-up">讓老屋的故事，繼續寫下去</h2>
+    <p class="section-desc fade-up">
+      留下您的聯絡資訊，我們的專業顧問會在 48 小時內與您聯繫，<br/>
+      提供免費的初步評估與建議方案。
+    </p>
+    <div class="form-card fade-up">
+      <div class="form-row">
+        <label>您的姓名</label>
+        <input type="text" placeholder="例：王大明" />
+      </div>
+      <div class="form-row">
+        <label>聯絡電話</label>
+        <input type="tel" placeholder="例：0912-345-678" />
+      </div>
+      <div class="form-row">
+        <label>房屋所在區域</label>
+        <select>
+          <option value="" disabled selected>請選擇區域</option>
+          <option>台北市 — 大安區</option>
+          <option>台北市 — 信義區</option>
+          <option>台北市 — 中山區</option>
+          <option>台北市 — 松山區</option>
+          <option>台北市 — 中正區</option>
+          <option>台北市 — 萬華區</option>
+          <option>台北市 — 其他</option>
+          <option>新北市 — 板橋區</option>
+          <option>新北市 — 永和區</option>
+          <option>新北市 — 中和區</option>
+          <option>新北市 — 新店區</option>
+          <option>新北市 — 三重區</option>
+          <option>新北市 — 其他</option>
+          <option>其他縣市</option>
+        </select>
+      </div>
+      <div class="form-row">
+        <label>房屋大約屋齡</label>
+        <select>
+          <option value="" disabled selected>請選擇屋齡</option>
+          <option>20-30 年</option>
+          <option>30-40 年</option>
+          <option>40-50 年</option>
+          <option>50 年以上</option>
+        </select>
+      </div>
+      <div class="form-row">
+        <label>想了解的事項（選填）</label>
+        <textarea placeholder="例：我家是四層樓公寓，想了解是否符合都更條件..."></textarea>
+      </div>
+      <button class="form-submit" onclick="submitForm()">送出免費諮詢 →</button>
+      <p class="form-note">我們重視您的隱私，資料僅用於本次諮詢服務。</p>
+    </div>
+  </div>
+</section>
+
+<!-- ═══ FOOTER ═══ -->
+<footer class="footer">
+  <div class="footer-inner">
+    <div class="footer-brand">齊家厝 U-SAFE Cloud &copy; 2026</div>
+    <div class="footer-links">
+      <a href="#">隱私政策</a>
+      <a href="#">服務條款</a>
+      <a href="#">聯絡我們</a>
+    </div>
+  </div>
+</footer>
+
+<!-- ═══ LOGIN / REGISTER MODAL ═══ -->
+<div class="modal-overlay" id="modalOverlay" onclick="closeModal(event)">
+  <div class="modal" onclick="event.stopPropagation()">
+    <button class="modal-close" onclick="closeModal()">&times;</button>
+    <div id="modal-login">
+      <h2 class="serif">歡迎回來</h2>
+      <p class="modal-sub">登入您的齊家厝帳號</p>
+      <div class="form-row">
+        <label>電子信箱</label>
+        <input type="email" placeholder="example@email.com" />
+      </div>
+      <div class="form-row">
+        <label>密碼</label>
+        <input type="password" placeholder="請輸入密碼" />
+      </div>
+      <button class="modal-submit" onclick="handleLogin()">登入</button>
+      <div class="modal-switch">
+        還沒有帳號？<a href="#" onclick="switchModal('register'); return false;">免費註冊</a>
+      </div>
+    </div>
+    <div id="modal-register" style="display:none">
+      <h2 class="serif">加入齊家厝</h2>
+      <p class="modal-sub">建立帳號，開始您的老屋新生之旅</p>
+      <div class="form-row">
+        <label>您的姓名</label>
+        <input type="text" placeholder="例：王大明" />
+      </div>
+      <div class="form-row">
+        <label>電子信箱</label>
+        <input type="email" placeholder="example@email.com" />
+      </div>
+      <div class="form-row">
+        <label>設定密碼</label>
+        <input type="password" placeholder="至少 8 個字元" />
+      </div>
+      <button class="modal-submit" onclick="handleRegister()">建立帳號</button>
+      <div class="modal-switch">
+        已經有帳號？<a href="#" onclick="switchModal('login'); return false;">登入</a>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  /* ══ Scroll animation ══ */
+  const observer = new IntersectionObserver((entries) => {
+    entries.forEach(entry => {
+      if (entry.isIntersecting) {
+        entry.target.classList.add('visible');
+      }
+    });
+  }, { threshold: 0.1, rootMargin: '0px 0px -40px 0px' });
+
+  document.querySelectorAll('.fade-up').forEach(el => observer.observe(el));
+
+  /* ══ Mobile nav toggle ══ */
+  function toggleNav() {
+    const links = document.getElementById('navLinks');
+    links.classList.toggle('open');
+  }
+
+  /* ══ Smooth scroll for nav links ══ */
+  document.querySelectorAll('.nav-link').forEach(link => {
+    link.addEventListener('click', (e) => {
+      document.getElementById('navLinks').classList.remove('open');
+    });
+  });
+
+  /* ══ Modal ══ */
+  function openModal(type) {
+    document.getElementById('modalOverlay').classList.add('show');
+    switchModal(type);
+    document.body.style.overflow = 'hidden';
+  }
+
+  function closeModal(e) {
+    if (e && e.target !== e.currentTarget) return;
+    document.getElementById('modalOverlay').classList.remove('show');
+    document.body.style.overflow = '';
+  }
+
+  function switchModal(type) {
+    document.getElementById('modal-login').style.display = type === 'login' ? '' : 'none';
+    document.getElementById('modal-register').style.display = type === 'register' ? '' : 'none';
+  }
+
+  /* ══ Demo handlers ══ */
+  function handleLogin() {
+    alert('Demo 模式：登入成功！\n（帳號：demo@usafe.tw / 密碼：usafe2026）');
+    closeModal();
+  }
+
+  function handleRegister() {
+    alert('Demo 模式：註冊成功！歡迎加入齊家厝。');
+    closeModal();
+    switchModal('login');
+  }
+
+  function submitForm() {
+    alert('感謝您的諮詢！我們的專業顧問將在 48 小時內與您聯繫。');
+  }
+</script>
+</body>
+</html>

@@ -1,0 +1,709 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>齊家厝 U-SAFE — 三代同堂的家，重獲新生</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+TC:wght@400;600;700;900&family=Noto+Sans+TC:wght@300;400;500;600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet" />
+  <style>
+    /* ═══════════════════════════════════════
+       齊家厝 U-SAFE  Story Page — Blog Article
+       Clean, minimal, text-first editorial layout
+       ═══════════════════════════════════════ */
+
+    :root {
+      --font-serif:  "Noto Serif TC", serif;
+      --font-sans:   "Noto Sans TC", "Inter", sans-serif;
+      --gold:        #C8A75D;
+      --gold-bright: #FFB200;
+      --gold-dim:    rgba(200,167,93,0.12);
+      --brick:       #CB3B1B;
+      --brick-h:     #AB3418;
+      --teal:        #2AA39F;
+      --sky:         #4A90D9;
+      --ink:         #1A1208;
+      --cta:         #C8A75D;
+      --cta-h:       #A98C4E;
+      --cta-shadow:  rgba(200,167,93,0.35);
+      --bg:          #FFFFFF;
+      --bg-alt:      #F5F5F5;
+      --bg-secondary:#D9D9D9;
+      --bg-card:     #FFFFFF;
+      --border-default: #E6E6E6;
+      --text:        #1A1208;
+      --text-2:      rgba(26,18,8,0.55);
+      --text-3:      rgba(26,18,8,0.38);
+      --border:      rgba(26,18,8,0.08);
+      --max-w: 780px;
+      --nav-h: 64px;
+      --nav-h-sm: 52px;
+      --spring: cubic-bezier(0.34, 1.3, 0.64, 1);
+    }
+
+    *, *::before, *::after { margin:0; padding:0; box-sizing:border-box; }
+    html { scroll-behavior:smooth; -webkit-font-smoothing:antialiased; }
+    body { font-family:var(--font-sans); background:var(--bg); color:var(--text); overflow-x:hidden; font-size:17px; line-height:1.9; }
+
+    /* ───── PILL NAV ───── */
+    .nav {
+      position: fixed;
+      top: 16px; left: 50%; transform: translateX(-50%);
+      width: calc(100% - 48px);
+      max-width: 880px;
+      height: var(--nav-h);
+      background: rgba(255,255,255,0.72);
+      backdrop-filter: blur(24px) saturate(1.4);
+      -webkit-backdrop-filter: blur(24px) saturate(1.4);
+      border-radius: 100px;
+      border: 1px solid rgba(26,18,8,0.06);
+      box-shadow: 0 2px 16px rgba(26,18,8,0.06);
+      display: grid;
+      grid-template-columns: auto 1fr auto;
+      align-items: center;
+      padding: 0 20px;
+      z-index: 100;
+      transition:
+        width 0.5s cubic-bezier(0.34, 1.4, 0.64, 1),
+        max-width 0.5s cubic-bezier(0.34, 1.4, 0.64, 1),
+        height 0.4s var(--spring),
+        background 0.35s ease,
+        box-shadow 0.35s ease,
+        border-color 0.35s ease;
+    }
+    .nav.scrolled {
+      width: calc(100% - 160px);
+      max-width: 720px;
+      height: var(--nav-h-sm);
+      background: rgba(255,255,255,0.88);
+      box-shadow: 0 4px 24px rgba(26,18,8,0.08);
+      border-color: rgba(26,18,8,0.08);
+    }
+    .nav-brand img {
+      height: 26px; width: auto;
+      filter: none;
+      transition: height 0.4s var(--spring);
+    }
+    .nav.scrolled .nav-brand img { height: 20px; }
+    .nav-links-desktop {
+      display: flex; align-items: center; justify-content: center; gap: 24px;
+    }
+    /* Mobile fullscreen overlay — hidden by default */
+    .nav-links {
+      display: none;
+    }
+    .nav-link {
+      color: var(--text-2);
+      text-decoration: none;
+      font-size: 13px; font-weight: 500;
+      letter-spacing: -0.01em;
+      transition: color 0.2s;
+    }
+    .nav-link:hover { color: var(--text); }
+    .nav-cta {
+      display: inline-flex; align-items: center;
+      padding: 8px 20px;
+      background: var(--cta);
+      color: #fff;
+      border-radius: 100px;
+      font-size: 13px; font-weight: 600;
+      text-decoration: none; border: none; cursor: pointer;
+      font-family: var(--font-sans);
+      transition: background 0.2s, transform 0.15s;
+      justify-self: end;
+    }
+    .nav-cta:hover { background: var(--cta-h); transform: scale(1.02); }
+    .nav.scrolled .nav-cta { padding: 6px 16px; font-size: 12px; }
+    .nav-toggle {
+      display: none; background: none; border: none;
+      color: var(--text-2); font-size: 22px; cursor: pointer;
+    }
+    .mobile-close { display: none; }
+    .mobile-login { display: none; }
+
+    /* ───── ARTICLE LAYOUT ───── */
+    .article-wrapper {
+      max-width: var(--max-w);
+      margin: 0 auto;
+      padding: calc(var(--nav-h) + 60px) 24px 0;
+    }
+
+    /* ───── ARTICLE HEADER ───── */
+    .article-header {
+      text-align: center;
+      margin-bottom: 48px;
+      animation: articleFadeIn 0.8s ease-out both;
+    }
+    @keyframes articleFadeIn {
+      from { opacity: 0; transform: translateY(16px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+    .breadcrumb {
+      font-size: 13px;
+      color: var(--text-3);
+      margin-bottom: 20px;
+    }
+    .breadcrumb a {
+      color: var(--text-3);
+      text-decoration: none;
+      transition: color 0.2s;
+    }
+    .breadcrumb a:hover {
+      color: var(--gold);
+    }
+    .breadcrumb span {
+      margin: 0 6px;
+    }
+    .article-tags {
+      font-size: 13px;
+      color: var(--text-2);
+      letter-spacing: 0.02em;
+      margin-bottom: 12px;
+    }
+    .article-date {
+      font-size: 14px;
+      color: var(--text-3);
+      margin-bottom: 20px;
+    }
+    .article-title {
+      font-family: var(--font-serif);
+      font-size: 42px;
+      font-weight: 700;
+      line-height: 1.35;
+      color: var(--text);
+      margin-bottom: 16px;
+      letter-spacing: -0.01em;
+    }
+    .article-subtitle {
+      font-size: 18px;
+      color: var(--text-2);
+      line-height: 1.7;
+      max-width: 600px;
+      margin: 0 auto;
+    }
+    .article-header-sep {
+      width: 60px;
+      height: 1px;
+      background: var(--border-default);
+      margin: 40px auto 0;
+    }
+
+    /* ───── ARTICLE BODY ───── */
+    .article-body {
+      max-width: var(--max-w);
+      margin: 0 auto;
+      padding: 0 24px 80px;
+      animation: articleFadeIn 0.8s ease-out 0.15s both;
+    }
+    .article-body p {
+      margin-bottom: 24px;
+    }
+    .article-body .lead {
+      font-size: 19px;
+      color: var(--text-2);
+      line-height: 1.9;
+      margin-bottom: 32px;
+    }
+    .article-body h2 {
+      font-family: var(--font-serif);
+      font-size: 28px;
+      font-weight: 700;
+      color: var(--text);
+      margin-top: 56px;
+      margin-bottom: 20px;
+      line-height: 1.4;
+    }
+    .article-body h3 {
+      font-family: var(--font-serif);
+      font-size: 22px;
+      font-weight: 600;
+      color: var(--text);
+      margin-top: 40px;
+      margin-bottom: 16px;
+      line-height: 1.4;
+    }
+    .article-body a {
+      color: var(--gold);
+      text-decoration: none;
+      transition: text-decoration 0.2s;
+    }
+    .article-body a:hover {
+      text-decoration: underline;
+    }
+
+    /* Images */
+    .article-img {
+      margin: 40px 0;
+    }
+    .article-img img {
+      width: 100%;
+      border-radius: 8px;
+      box-shadow: 0 4px 24px rgba(26,18,8,0.08);
+    }
+    .article-img figcaption {
+      font-size: 14px;
+      color: var(--text-3);
+      text-align: center;
+      margin-top: 8px;
+    }
+
+    /* Blockquote */
+    .article-body blockquote {
+      border-left: 3px solid var(--gold);
+      padding-left: 24px;
+      margin: 40px 0;
+      font-family: var(--font-serif);
+      font-size: 20px;
+      font-style: italic;
+      line-height: 1.8;
+      color: var(--text-2);
+    }
+    .article-body blockquote cite {
+      display: block;
+      font-size: 14px;
+      font-style: normal;
+      font-family: var(--font-sans);
+      color: var(--text-3);
+      margin-top: 12px;
+    }
+
+    /* Timeline list */
+    .timeline-list {
+      list-style: none;
+      padding: 0;
+      margin: 28px 0 32px;
+    }
+    .timeline-list li {
+      position: relative;
+      padding: 8px 0 8px 24px;
+      font-size: 16px;
+      color: var(--text);
+      border-left: 2px solid var(--border-default);
+    }
+    .timeline-list li::before {
+      content: '';
+      position: absolute;
+      left: -5px;
+      top: 14px;
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: var(--gold);
+    }
+    .timeline-list li strong {
+      color: var(--text);
+      font-weight: 600;
+    }
+    .timeline-list li span {
+      color: var(--text-2);
+    }
+
+    /* Numbered list */
+    .article-body ol {
+      padding-left: 24px;
+      margin: 20px 0 28px;
+    }
+    .article-body ol li {
+      margin-bottom: 12px;
+      padding-left: 4px;
+    }
+    .article-body ol li strong {
+      font-weight: 600;
+    }
+
+    /* ───── ARTICLE FOOTER ───── */
+    .article-footer {
+      max-width: var(--max-w);
+      margin: 0 auto;
+      padding: 0 24px 80px;
+    }
+    .article-footer-sep {
+      height: 1px;
+      background: var(--border-default);
+      margin-bottom: 48px;
+    }
+    .article-cta {
+      text-align: center;
+      margin-bottom: 40px;
+    }
+    .article-cta p {
+      font-family: var(--font-serif);
+      font-size: 22px;
+      font-weight: 600;
+      color: var(--text);
+      margin-bottom: 16px;
+    }
+    .article-cta a {
+      font-size: 17px;
+      color: var(--gold);
+      text-decoration: none;
+      font-weight: 600;
+      transition: color 0.2s;
+    }
+    .article-cta a:hover {
+      color: var(--cta-h);
+      text-decoration: underline;
+    }
+    .article-share {
+      text-align: center;
+      font-size: 14px;
+      color: var(--text-3);
+    }
+
+    /* ───── PAGE FOOTER ───── */
+    .page-footer {
+      text-align: center;
+      padding: 40px 24px;
+      border-top: 1px solid var(--border-default);
+      font-size: 13px;
+      color: var(--text-3);
+    }
+    .page-footer a {
+      color: var(--text-3);
+      text-decoration: none;
+      transition: color 0.2s;
+    }
+    .page-footer a:hover {
+      color: var(--gold);
+    }
+
+    /* ───── RESPONSIVE ───── */
+    @media (max-width: 768px) {
+      .nav-links-desktop { display: none; }
+      .nav-cta { display: none; }
+
+      /* Fullscreen mobile menu */
+      .nav-links.open {
+        display: flex !important; flex-direction: column;
+        position: fixed;
+        inset: 0;
+        margin: 0;
+        width: 100%; height: 100%;
+        background: #FFFFFF;
+        padding: 100px 32px 60px;
+        gap: 0;
+        z-index: 9998;
+        align-items: flex-start;
+        justify-content: flex-start;
+        border: none; border-radius: 0;
+        animation: menuInkOpen 0.6s ease-out forwards;
+        overflow-y: auto;
+      }
+      .mobile-close { display: none; }
+      .nav-links.open .mobile-close {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        position: absolute;
+        top: 20px; right: 24px;
+        width: 48px; height: 48px;
+        font-size: 32px;
+        color: var(--text);
+        background: none;
+        border: none;
+        cursor: pointer;
+        z-index: 9999;
+        border-radius: 50%;
+        transition: background 0.2s, color 0.2s;
+      }
+      .nav-links.open .mobile-close:hover {
+        background: var(--bg-alt);
+        color: var(--gold);
+      }
+      .nav-links.closing {
+        animation: menuInkClose 0.5s ease-in forwards;
+      }
+      @keyframes menuInkOpen {
+        0%   { opacity: 0; filter: blur(8px); }
+        40%  { opacity: 0.7; filter: blur(3px); }
+        100% { opacity: 1; filter: none; }
+      }
+      @keyframes menuInkClose {
+        0%   { opacity: 1; filter: none; }
+        50%  { opacity: 0.5; filter: blur(4px); }
+        100% { opacity: 0; filter: blur(10px); visibility: hidden; }
+      }
+      .nav-links.open .nav-link {
+        font-size: 28px;
+        font-family: var(--font-serif);
+        font-weight: 700;
+        color: var(--text);
+        padding: 20px 0;
+        border-bottom: 1px solid var(--border-default);
+        width: 100%;
+        text-align: left;
+        opacity: 0;
+        transform: translateY(20px);
+        animation: mobileMenuIn 0.8s var(--spring) forwards;
+        transition: color 0.2s, border-color 0.2s;
+      }
+      .nav-links.open .nav-link:hover {
+        color: var(--gold);
+        border-bottom-color: var(--gold);
+      }
+      .nav-links.open .nav-link:nth-child(2) { animation-delay: 0.08s; }
+      .nav-links.open .nav-link:nth-child(3) { animation-delay: 0.16s; }
+      .nav-links.open .nav-link:nth-child(4) { animation-delay: 0.24s; }
+      .nav-links.open .nav-link:nth-child(5) { animation-delay: 0.32s; }
+
+      .mobile-login { display: none; }
+      .nav-links.open .mobile-login {
+        display: block;
+        font-size: 28px;
+        font-family: var(--font-serif);
+        font-weight: 700;
+        color: var(--cta);
+        padding: 20px 0;
+        width: 100%;
+        text-align: left;
+        background: none;
+        border: none;
+        cursor: pointer;
+        opacity: 0;
+        transform: translateY(20px);
+        animation: mobileMenuIn 0.8s var(--spring) 0.40s forwards;
+        transition: color 0.2s;
+      }
+      .nav-links.open .mobile-login:hover { color: var(--cta-h); }
+
+      @keyframes mobileMenuIn {
+        to { opacity: 1; transform: translateY(0); }
+      }
+
+      .nav-toggle {
+        display: block;
+        z-index: 9999;
+        font-size: 24px;
+        justify-self: end;
+        position: relative;
+      }
+
+      .article-wrapper {
+        padding-top: calc(var(--nav-h) + 36px);
+      }
+      .article-title {
+        font-size: 28px;
+      }
+      .article-subtitle {
+        font-size: 16px;
+      }
+      .article-body {
+        font-size: 16px;
+      }
+      .article-body .lead {
+        font-size: 17px;
+      }
+      .article-body h2 {
+        font-size: 24px;
+        margin-top: 44px;
+      }
+      .article-body h3 {
+        font-size: 20px;
+      }
+      .article-body blockquote {
+        font-size: 18px;
+      }
+      .nav.scrolled {
+        width: calc(100% - 48px);
+        max-width: 880px;
+      }
+    }
+  </style>
+</head>
+<body>
+
+<!-- ─── NAV ─── -->
+<nav class="nav" id="navbar">
+  <a href="usafe-landing-v2.0.html" class="nav-brand">
+    <img src="../assets/images/logo-dark.png" alt="齊家厝 U-SAFE" />
+  </a>
+  <div class="nav-links-desktop">
+    <a class="nav-link" href="usafe-blog.html">屋主故事</a>
+    <a class="nav-link" href="usafe-landing-v2.0.html#before">老屋現況</a>
+    <a class="nav-link" href="usafe-landing-v2.0.html#journey">服務流程</a>
+    <a class="nav-link" href="usafe-landing-v2.0.html#after">成功案例</a>
+    <a class="nav-link" href="usafe-landing-v2.0.html#cta">免費諮詢</a>
+  </div>
+  <button class="nav-cta" onclick="window.location.href='usafe-dashboard.html'">登入</button>
+  <button class="nav-toggle" onclick="toggleNav()">&#9776;</button>
+</nav>
+<!-- Mobile fullscreen menu (outside nav to avoid transform containing block) -->
+<div class="nav-links" id="navLinks">
+  <button class="mobile-close" onclick="toggleNav()">&times;</button>
+  <a class="nav-link" href="usafe-blog.html" onclick="closeNav()">屋主故事</a>
+  <a class="nav-link" href="usafe-landing-v2.0.html#before" onclick="closeNav()">老屋現況</a>
+  <a class="nav-link" href="usafe-landing-v2.0.html#journey" onclick="closeNav()">服務流程</a>
+  <a class="nav-link" href="usafe-landing-v2.0.html#after" onclick="closeNav()">成功案例</a>
+  <a class="nav-link" href="usafe-landing-v2.0.html#cta" onclick="closeNav()">免費諮詢</a>
+  <button class="mobile-login" onclick="closeNav();window.location.href='usafe-dashboard.html';">登入 / 註冊</button>
+</div>
+
+<!-- ─── ARTICLE HEADER ─── -->
+<div class="article-wrapper">
+  <header class="article-header">
+    <div class="breadcrumb">
+      <a href="usafe-landing-v2.0.html">首頁</a>
+      <span>&gt;</span>
+      <a href="usafe-blog.html">屋主故事</a>
+      <span>&gt;</span>
+      <span>三代同堂的家</span>
+    </div>
+    <div class="article-tags">成功案例 · 都更故事</div>
+    <div class="article-date">2024 年 12 月</div>
+    <h1 class="article-title">三代同堂的家，重獲新生</h1>
+    <p class="article-subtitle">台北市大安區陳家的都更旅程 — 從 42 年老屋到嶄新 12 層大樓</p>
+    <div class="article-header-sep"></div>
+  </header>
+</div>
+
+<!-- ─── ARTICLE BODY ─── -->
+<article class="article-body">
+
+  <p class="lead">住在台北大安區的陳家，三代人在同一棟公寓裡生活了四十二年。這棟五層樓的老公寓，承載著無數家庭記憶，卻也因為歲月的侵蝕，逐漸成為一家人心中的隱憂。</p>
+
+  <h2>老屋的困境</h2>
+
+  <p>走進陳家位於四樓的住所，最先映入眼簾的是客廳天花板上斑駁的壁癌痕跡。每逢梅雨季，頂樓的漏水問題就會蔓延到四樓，牆面不斷滲出水漬。屋齡已達 42 年的老公寓，管線全面老化，水管生鏽導致水壓不穩，電線更是讓人擔心安全問題。</p>
+
+  <p>對於年過七旬的陳先生夫婦來說，沒有電梯的五層公寓更是日常生活的一大挑戰。每次出門買菜、看醫生，都要一階一階地爬樓梯。35 坪的空間裡住著三代人，雖然擁擠但充滿溫馨，然而建築結構的安全隱患卻讓全家人寢食難安。整棟公寓共 12 戶住戶，幾乎每家都面臨相同的困境。</p>
+
+  <figure class="article-img">
+    <img src="../assets/images/old-brick-house.png" alt="陳家 42 年老公寓外觀" />
+    <figcaption>陳家居住了 42 年的老公寓，外牆磁磚剝落、管線外露</figcaption>
+  </figure>
+
+  <h2>踏出第一步</h2>
+
+  <p>陳家其實不是沒有想過都更。早在十年前，就有建商來談過，但當時資訊不透明，條件也談不攏，整件事就不了了之了。之後幾年，雖然偶爾會聽到鄰居提起，但總覺得都更是一件遙不可及、過於複雜的事。</p>
+
+  <p>轉機出現在 2022 年初。陳家的女兒在網路上搜尋老屋相關資訊時，偶然發現了齊家厝平台。她幫父母在線上做了免費的房屋評估，短短幾分鐘就得到了一份初步的都更可行性分析報告。報告中清楚列出了房屋的現況評分、周邊都更案例，以及預估的改建效益。</p>
+
+  <blockquote>
+    「其實我們猶豫了很久，總覺得都更是很遙遠的事。直到有一天女兒幫我們在齊家厝做了免費評估，才發現原來沒那麼複雜。」
+    <cite>— 陳太太，72 歲</cite>
+  </blockquote>
+
+  <p>評估報告讓陳家一家人第一次具體地看到了都更的可能性。齊家厝的顧問也主動聯繫，用簡單易懂的方式解釋了整個流程，打消了他們心中的許多疑慮。</p>
+
+  <h2>整合與媒合</h2>
+
+  <p>都更最困難的部分，往往不是建築本身，而是住戶之間的整合。12 戶人家，每個人的需求和顧慮都不一樣。有人擔心分配不公平，有人害怕搬遷期間的不便，也有人對整個流程抱持懷疑態度。</p>
+
+  <p>齊家厝平台透過 AI 智慧媒合系統，根據基地條件、住戶需求與建商專長，篩選出最適合的建商合作方案。平台上的資訊完全透明，每一個階段的進度、每一次的會議紀錄，所有住戶都能即時查看。</p>
+
+  <figure class="article-img">
+    <img src="../assets/images/construction-hero.png" alt="住戶整合會議" />
+    <figcaption>齊家厝協助舉辦住戶說明會，讓每位屋主都能充分了解方案內容</figcaption>
+  </figure>
+
+  <p>經過數次住戶說明會和一對一溝通，整合工作在四個月內順利完成。最終，12 戶中有 11 戶同意參與，整合率達到 92%。這個數字在都更案例中算是相當高的，主要歸功於全程透明的資訊揭露和專業的溝通協調。</p>
+
+  <h2>漫長但值得的等待</h2>
+
+  <p>住戶整合完成後，接下來是漫長的政府審查流程。從事業計畫書的撰寫、環境影響評估、到建照的申請，每一個環節都需要時間和耐心。齊家厝平台持續追蹤每個階段的進度，讓住戶們不會因為等待而感到焦慮。</p>
+
+  <p>以下是陳家都更案的完整時間軸：</p>
+
+  <ul class="timeline-list">
+    <li><strong>2022.03</strong> <span>初次諮詢，完成線上免費評估</span></li>
+    <li><strong>2022.06</strong> <span>住戶整合完成，達成 92% 同意率</span></li>
+    <li><strong>2022.12</strong> <span>政府核定事業計畫，取得建照</span></li>
+    <li><strong>2023.03</strong> <span>正式動工，住戶暫時遷出</span></li>
+    <li><strong>2024.09</strong> <span>完工交屋，全體住戶回遷新家</span></li>
+  </ul>
+
+  <p>從初次諮詢到完工交屋，整個過程歷時約兩年半。雖然中間有過焦慮和等待，但陳家一家人都覺得：這一切都是值得的。</p>
+
+  <h2>嶄新的家</h2>
+
+  <p>2024 年 9 月，陳家搬進了全新的 12 層大樓。寬敞的電梯、明亮的公共空間、現代化的管線設備，一切都和過去截然不同。原本 35 坪的空間，在新大樓中變成了 45 坪，多出的 10 坪讓三代人的生活更加舒適。</p>
+
+  <figure class="article-img">
+    <img src="../assets/images/new-highrise-1.png" alt="陳家新大樓外觀" />
+    <figcaption>全新完工的 12 層住宅大樓，現代化設計融合社區綠化</figcaption>
+  </figure>
+
+  <p>更讓陳家人驚喜的是房屋價值的變化。根據最新的市場估價，新房的價值較改建前增長了約 180%。不過對陳先生來說，最重要的不是數字，而是一家人能繼續在這個熟悉的街區裡，住在一個安全、舒適的家。</p>
+
+  <blockquote>
+    「沒想到我們這種老公寓也能變成這樣，孫子們都搶著要來住！現在每天早上打開窗戶，看到的風景完全不一樣了。」
+    <cite>— 陳先生，75 歲</cite>
+  </blockquote>
+
+  <h2>給正在猶豫的你</h2>
+
+  <p>陳家的故事並非特例。在台灣，有無數棟屋齡超過 30 年的老公寓，住著和陳家一樣的家庭。都更確實是一段漫長的旅程，但只要踏出第一步，就會發現它並沒有想像中那麼遙不可及。</p>
+
+  <p>回顧這段歷程，陳家想和所有正在猶豫的屋主分享三個重要的心得：</p>
+
+  <ol>
+    <li><strong>早期整合是關鍵</strong> — 越早開始和鄰居溝通，越容易凝聚共識。拖得越久，變數越多。</li>
+    <li><strong>選對建商很重要</strong> — 不要只看條件和數字，建商的信譽、過往實績和溝通態度同樣關鍵。齊家厝的 AI 媒合幫了我們很大的忙。</li>
+    <li><strong>透明資訊減少恐懼</strong> — 都更最大的敵人是不確定性。當所有資訊都攤在陽光下，恐懼自然消散，信任也就建立起來了。</li>
+  </ol>
+
+  <p>如果你也住在一棟有故事的老房子裡，不妨花幾分鐘做一次免費評估，了解你的房屋有什麼樣的可能性。也許，下一個重獲新生的故事，就是你的。</p>
+
+</article>
+
+<!-- ─── ARTICLE FOOTER ─── -->
+<div class="article-footer">
+  <div class="article-footer-sep"></div>
+  <div class="article-cta">
+    <p>想了解您的老屋有什麼可能？</p>
+    <a href="usafe-evaluate.html">免費評估我的房屋 &rarr;</a>
+  </div>
+  <div class="article-share">分享此文章</div>
+</div>
+
+<!-- ─── PAGE FOOTER ─── -->
+<footer class="page-footer">
+  <p>&copy; 2026 齊家厝 U-SAFE. All rights reserved.</p>
+</footer>
+
+<script>
+  /* ─── Nav shrink on scroll ─── */
+  (function() {
+    var nav = document.getElementById('navbar');
+    var scrollThreshold = 80;
+    window.addEventListener('scroll', function() {
+      if (window.scrollY > scrollThreshold) {
+        nav.classList.add('scrolled');
+      } else {
+        nav.classList.remove('scrolled');
+      }
+    }, { passive: true });
+  })();
+
+  /* ─── Mobile nav toggle ─── */
+  function toggleNav() {
+    var nav = document.getElementById('navLinks');
+    var btn = document.querySelector('.nav-toggle');
+    if (nav.classList.contains('open')) {
+      nav.classList.add('closing');
+      btn.innerHTML = '&#9776;';
+      document.body.style.overflow = '';
+      setTimeout(function() {
+        nav.classList.remove('open', 'closing');
+      }, 500);
+    } else {
+      nav.classList.add('open');
+      btn.innerHTML = '&times;';
+      document.body.style.overflow = 'hidden';
+    }
+  }
+  function closeNav() {
+    var nav = document.getElementById('navLinks');
+    var btn = document.querySelector('.nav-toggle');
+    if (!nav.classList.contains('open')) return;
+    nav.classList.add('closing');
+    btn.innerHTML = '&#9776;';
+    document.body.style.overflow = '';
+    setTimeout(function() {
+      nav.classList.remove('open', 'closing');
+    }, 500);
+  }
+</script>
+</body>
+</html>
